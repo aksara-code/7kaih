@@ -2,17 +2,18 @@
 session_start();
 require_once 'koneksi.php';
 
-// Cek apakah siswa sudah login
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'siswa') {
+// Pengecekan Session ID yang fleksibel (Mencegah mismatch nama session)
+$siswa_id = $_SESSION['user_id'] ?? $_SESSION['id_siswa'] ?? $_SESSION['id'] ?? null;
+
+if (!$siswa_id || !isset($_SESSION['role']) || $_SESSION['role'] !== 'siswa') {
     header("Location: index.php");
     exit();
 }
 
-$siswa_id = $_SESSION['user_id'];
-$error    = '';
-$success  = '';
+$error   = '';
+$success = '';
 
-// Cek notifikasi sukses dari URL (Post-Redirect-Get)
+// Notifikasi sukses dari URL
 if (isset($_GET['status']) && $_GET['status'] === 'success') {
     $success = 'Catatan makan sehat & bergizi berhasil disimpan!';
 }
@@ -25,11 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $catatan_tambahan  = trim($_POST['catatan_tambahan'] ?? '');
     $kategori          = 'makan_sehat';
 
-    // Format datetime agar sesuai standar MySQL (YYYY-MM-DD HH:MM:SS)
-    $waktu_mulai   = !empty($waktu_mulai_raw) ? date('Y-m-d H:i:s', strtotime($waktu_mulai_raw)) : '';
+    // Format datetime standar MySQL
+    $waktu_mulai   = !empty($waktu_mulai_raw) ? date('Y-m-d H:i:s', strtotime($waktu_mulai_raw)) : date('Y-m-d H:i:s');
     $waktu_selesai = !empty($waktu_selesai_raw) ? date('Y-m-d H:i:s', strtotime($waktu_selesai_raw)) : null;
 
-    // Validasi input
     if (empty($waktu_mulai_raw)) {
         $error = 'Waktu makan wajib diisi!';
     } elseif (empty($deskripsi)) {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $foto_name = null;
 
-        // Proses Unggah Foto
+        // Proses Upload Foto
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
             $file_tmp  = $_FILES['foto']['tmp_name'];
             $file_name = $_FILES['foto']['name'];
@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $foto_name  = 'makan_sehat_' . $siswa_id . '_' . time() . '.' . $file_ext;
                 $upload_dir = 'uploads/aktivitas/';
 
-                // Buat direktori jika belum ada
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0777, true);
                 }
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "INSERT INTO log_aktivitas (id_siswa, kategori, waktu_mulai, waktu_selesai, deskripsi, catatan_tambahan, foto) 
                         VALUES (:id_siswa, :kategori, :waktu_mulai, :waktu_selesai, :deskripsi, :catatan_tambahan, :foto)";
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([
+                $inserted = $stmt->execute([
                     'id_siswa'         => $siswa_id,
                     'kategori'         => $kategori,
                     'waktu_mulai'      => $waktu_mulai,
@@ -78,17 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'foto'             => $foto_name
                 ]);
 
-                // Redirect ke halaman yang sama agar data langsung ter-refresh dan muncul di daftar
-                header("Location: makan_sehat.php?status=success");
-                exit();
+                if ($inserted) {
+                    header("Location: makan_sehat.php?status=success");
+                    exit();
+                } else {
+                    $error = 'Gagal menyimpan data ke database.';
+                }
             } catch (\PDOException $e) {
-                $error = 'Gagal menyimpan catatan: ' . $e->getMessage();
+                $error = 'Database Error: ' . $e->getMessage();
             }
         }
     }
 }
 
-// LOGIKA PAGINATION (MAX 5 DATA PER HALAMAN)
+// LOGIKA PAGINATION
 $limit = 5;
 $page  = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
@@ -108,15 +110,16 @@ try {
         $offset = ($page - 1) * $limit;
     }
 
-    // 2. Ambil Data Terbaru Berdasarkan Limit dan Offset
+    // 2. Ambil Data Terbaru
     $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan_sehat' ORDER BY waktu_mulai DESC LIMIT $limit OFFSET $offset");
     $stmt_riwayat->execute(['id_siswa' => $siswa_id]);
-    $riwayat_list = $stmt_riwayat->fetchAll();
+    $riwayat_list = $stmt_riwayat->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (\PDOException $e) {
     $riwayat_list  = [];
     $total_records = 0;
     $total_pages   = 1;
+    $error         = 'Gagal mengambil data: ' . $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -214,7 +217,7 @@ try {
                                     <i class="fa-solid fa-calendar-day"></i>
                                     <span>
                                         <?= date('d M Y, H:i', strtotime($item['waktu_mulai'])) ?>
-                                        <?php if ($item['waktu_selesai']): ?>
+                                        <?php if (!empty($item['waktu_selesai'])): ?>
                                             — <?= date('H:i', strtotime($item['waktu_selesai'])) ?>
                                         <?php endif; ?>
                                     </span>
@@ -411,7 +414,7 @@ try {
             }
         }
 
-        // Buka modal secara otomatis jika terdapat error saat mengirim form
+        // Buka modal secara otomatis jika terdapat error saat mengisi form
         <?php if (!empty($error)): ?>
             toggleModal(true);
         <?php endif; ?>

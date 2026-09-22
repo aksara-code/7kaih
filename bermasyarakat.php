@@ -114,14 +114,17 @@ try {
         <div class="absolute -left-10 -top-10 w-40 h-40 bg-emerald-600/30 rounded-full blur-xl pointer-events-none"></div>
 
         <div class="max-w-xl mx-auto relative z-10">
-            <!-- Navigasi Kembali ke Dashboard -->
+            <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between mb-4">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
                 </a>
-                <span class="text-xs font-bold bg-emerald-900/60 px-3 py-1.5 rounded-lg text-emerald-200">
-                    Siswa
-                </span>
+                
+                <!-- Tombol + Baru Mengarahkan ke Pop Up Form -->
+                <button onclick="toggleModal(true)" type="button" 
+                    class="inline-flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-plus text-xs"></i> Baru
+                </button>
             </div>
 
             <div class="text-center">
@@ -141,19 +144,6 @@ try {
 
     <!-- Container Utama Halaman -->
     <div class="w-full max-w-xl mx-auto px-4 -mt-10 mb-auto z-20 space-y-4">
-        
-        <!-- Baris Tombol Aksi & Notifikasi -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-md border border-slate-200">
-            <div>
-                <h2 class="text-sm font-extrabold text-slate-800">Riwayat Bermasyarakat</h2>
-                <p class="text-[11px] font-semibold text-slate-500">Daftar aksi sosial yang telah kamu catat</p>
-            </div>
-            <!-- Tombol Baru untuk Membuka Pop-Up Form -->
-            <button onclick="toggleModal(true)" type="button" 
-                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-800/20 transition-all active:scale-95">
-                <i class="fa-solid fa-plus text-sm"></i> Baru
-            </button>
-        </div>
 
         <!-- Pesan Notifikasi Error / Sukses -->
         <?php if (!empty($error)): ?>
@@ -173,18 +163,15 @@ try {
         <!-- Section Tampilan Data / Empty State -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-300/60 border border-slate-200">
             <?php if (empty($riwayat_list)): ?>
-                <!-- Tampilan Jika Siswa Belum Mengisi Data -->
+                <!-- Tampilan Jika Siswa Belum Mengisi Data (Tanpa Tombol Tambah/Double) -->
                 <div class="text-center py-10 px-4">
                     <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fa-solid fa-folder-open text-3xl text-emerald-600"></i>
                     </div>
                     <h3 class="text-sm font-extrabold text-slate-800 mb-1">Kamu belum mengisi data</h3>
-                    <p class="text-xs text-slate-500 font-semibold max-w-xs mx-auto mb-5">
-                        Belum ada catatan kegiatan bermasyarakat. Klik tombol di bawah untuk menambahkan kegiatan pertama kamu!
+                    <p class="text-xs text-slate-500 font-semibold max-w-xs mx-auto">
+                        Belum ada catatan kegiatan bermasyarakat. Klik tombol <strong>"+ Baru"</strong> di bagian atas untuk menambahkan kegiatan.
                     </p>
-                    <button onclick="toggleModal(true)" type="button" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all">
-                        <i class="fa-solid fa-plus"></i> Tambah Kegiatan
-                    </button>
                 </div>
             <?php else: ?>
                 <!-- Tampilan Daftar Riwayat Kegiatan -->

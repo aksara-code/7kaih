@@ -124,19 +124,18 @@ try {
                 </span>
             </div>
 
-            <div class="text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white text-emerald-800 shadow-md mb-2">
-                    <i class="fa-solid fa-people-hold text-3xl"></i>
-                </div>
-                <h1 class="text-2xl font-extrabold tracking-tight text-white">
-                    Kegiatan Bermasyarakat
-                </h1>
-                <p class="text-xs font-semibold text-emerald-100 mt-1">
-                    Catat aksi sosial dan kepedulian lingkunganmu hari ini
-                </p>
-            </div>
-        </div>
+           <div class="text-center">
+    <!-- Wadah Putih dengan Gambar Logo -->
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
+        <img src="logo_bermasyarakat-removebg-preview.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
     </div>
+    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+        Kegiatan Bermasyarakat
+    </h1>
+    <p class="text-xs font-semibold text-emerald-100 mt-1">
+        Catat aksi sosial dan kepedulian lingkunganmu hari ini
+    </p>
+</div>
 
     <!-- Container Utama Form -->
     <div class="w-full max-w-xl mx-auto px-4 -mt-12 mb-auto z-20">

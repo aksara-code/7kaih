@@ -15,19 +15,19 @@ $error   = $_SESSION['error'] ?? '';
 $success = $_SESSION['success'] ?? '';
 unset($_SESSION['error'], $_SESSION['success']);
 
-// Proses Submit Form Log Makan Sehat
+// Proses Submit Form Log Olahraga
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $waktu_mulai      = $_POST['waktu_mulai'] ?? '';
     $waktu_selesai    = !empty($_POST['waktu_selesai']) ? $_POST['waktu_selesai'] : null;
     $deskripsi        = trim($_POST['deskripsi'] ?? '');
     $catatan_tambahan = trim($_POST['catatan_tambahan'] ?? '');
-    $kategori         = 'makan';
+    $kategori         = 'olahraga';
 
     // Validasi input
     if (empty($waktu_mulai)) {
-        $error = 'Waktu makan wajib diisi!';
+        $error = 'Waktu olahraga wajib diisi!';
     } elseif (empty($deskripsi)) {
-        $error = 'Deskripsi makanan/menu sehat wajib diisi!';
+        $error = 'Deskripsi kegiatan olahraga wajib diisi!';
     } else {
         $foto_name = null;
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $allowed   = ['jpg', 'jpeg', 'png', 'webp'];
 
             if (in_array($file_ext, $allowed)) {
-                $foto_name  = 'makan' . $siswa_id . '_' . time() . '.' . $file_ext;
+                $foto_name  = 'olahraga_' . $siswa_id . '_' . time() . '.' . $file_ext;
                 $upload_dir = 'uploads/aktivitas/';
 
                 // Buat direktori jika belum ada
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if (!move_uploaded_file($file_tmp, $upload_dir . $foto_name)) {
-                    $error = 'Gagal mengunggah foto makanan.';
+                    $error = 'Gagal mengunggah foto kegiatan olahraga.';
                     $foto_name = null;
                 }
             } else {
@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 // Simpan pesan sukses ke session dan redirect (PRG Pattern)
-                $_SESSION['success'] = 'Catatan makan sehat & bergizi berhasil disimpan!';
-                header("Location: makan_sehat.php");
+                $_SESSION['success'] = 'Catatan kegiatan olahraga berhasil disimpan!';
+                header("Location: olahraga.php");
                 exit();
 
             } catch (\PDOException $e) {
@@ -92,7 +92,7 @@ $offset = ($page - 1) * $limit;
 
 try {
     // 1. Hitung Total Data untuk Halaman
-    $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan'");
+    $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'olahraga'");
     $stmt_count->execute(['id_siswa' => $siswa_id]);
     $total_records = $stmt_count->fetchColumn();
 
@@ -105,12 +105,9 @@ try {
         $offset = ($page - 1) * $limit;
     }
 
-    // 2. Ambil 5 Data Terbaru Berdasarkan Limit dan Offset (Terbaru di posisi paling atas)
-    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan' ORDER BY id DESC LIMIT :limit OFFSET :offset");
-    $stmt_riwayat->bindValue(':id_siswa', $siswa_id, PDO::PARAM_INT);
-    $stmt_riwayat->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt_riwayat->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt_riwayat->execute();
+    // 2. Ambil 5 Data Terbaru Berdasarkan Limit dan Offset (ORDER BY id DESC agar data baru selalu di atas)
+    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'olahraga' ORDER BY id DESC LIMIT $limit OFFSET $offset");
+    $stmt_riwayat->execute(['id_siswa' => $siswa_id]);
     $riwayat_list = $stmt_riwayat->fetchAll();
 
 } catch (\PDOException $e) {
@@ -124,7 +121,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Makan Sehat & Bergizi — 7 Kebiasaan</title>
+    <title>Olahraga & Fisik — 7 Kebiasaan</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -163,13 +160,13 @@ try {
             <div class="text-center">
                 <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
-                    <img src="img/logo_makan_sehat.png" alt="Logo Makan Sehat" class="w-full h-full object-contain">
+                    <img src="img/logo_olahraga.png" alt="Logo Olahraga" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white">
-                    Makan Sehat & Bergizi
+                    Olahraga & Aktivitas Fisik
                 </h1>
                 <p class="text-xs font-semibold text-emerald-100 mt-1">
-                    Catat pola makan sehat dan gizi seimbangmu hari ini
+                    Catat aktivitas fisik dan kebiasaan olahragamu hari ini
                 </p>
             </div>
         </div>
@@ -199,11 +196,11 @@ try {
                 <!-- Tampilan Jika Siswa Belum Mengisi Data -->
                 <div class="text-center py-10 px-4">
                     <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fa-solid fa-utensils text-3xl text-emerald-600"></i>
+                        <i class="fa-solid fa-person-running text-3xl text-emerald-600"></i>
                     </div>
                     <h3 class="text-sm font-extrabold text-slate-800 mb-1">Kamu belum mengisi data</h3>
                     <p class="text-xs text-slate-500 font-semibold max-w-xs mx-auto">
-                        Belum ada catatan makan sehat & bergizi. Klik tombol <strong>"+ Baru"</strong> di bagian atas untuk menambahkan kegiatan.
+                        Belum ada catatan aktivitas olahraga. Klik tombol <strong>"+ Baru"</strong> di bagian atas untuk menambahkan kegiatan.
                     </p>
                 </div>
             <?php else: ?>
@@ -237,12 +234,12 @@ try {
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Bagian Kanan: Foto Makanan (w-24 h-24 / sm:w-28 sm:h-28) -->
+                            <!-- Bagian Kanan: Foto Kegiatan Olahraga (w-24 h-24 / sm:w-28 sm:h-28) -->
                             <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
                                 <div class="shrink-0">
-                                    <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Makanan">
+                                    <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Dokumentasi">
                                         <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" 
-                                             alt="Foto Makanan" 
+                                             alt="Foto Olahraga" 
                                              class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-white shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200">
                                     </a>
                                 </div>
@@ -301,7 +298,7 @@ try {
             <!-- Header Modal -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                 <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-utensils text-emerald-700"></i> Tambah Catatan Makan Sehat
+                    <i class="fa-solid fa-person-running text-emerald-700"></i> Tambah Kegiatan Olahraga
                 </h3>
                 <button onclick="toggleModal(false)" type="button" class="text-slate-400 hover:text-slate-600 transition-all p-1">
                     <i class="fa-solid fa-xmark text-xl"></i>
@@ -309,13 +306,13 @@ try {
             </div>
 
             <!-- Body Form Modal -->
-            <form action="makan_sehat.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form action="olahraga.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                 
                 <!-- Waktu Mulai & Selesai -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
-                            Waktu Makan <span class="text-red-500">*</span>
+                            Waktu Mulai <span class="text-red-500">*</span>
                         </label>
                         <input type="datetime-local" name="waktu_mulai" required
                             value="<?= date('Y-m-d\TH:i') ?>"
@@ -330,12 +327,12 @@ try {
                     </div>
                 </div>
 
-                <!-- Deskripsi Makanan / Menu -->
+                <!-- Deskripsi Kegiatan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
-                        Menu / Deskripsi Makanan <span class="text-red-500">*</span>
+                        Deskripsi Olahraga / Aktivitas Fisik <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="deskripsi" rows="3" required placeholder="Contoh: Makan siang dengan menu gizi seimbang (nasi merah, dada ayam panggang, tumis kangkung, dan buah pisang)..."
+                    <textarea name="deskripsi" rows="3" required placeholder="Contoh: Jogging santai di taman selama 20 menit dan dilanjutkan melakukan stretching..."
                         class="w-full p-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all"></textarea>
                 </div>
 
@@ -344,14 +341,14 @@ try {
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Catatan Tambahan <span class="text-slate-400 font-normal">(Opsional)</span>
                     </label>
-                    <textarea name="catatan_tambahan" rows="2" placeholder="Contoh: Menghabiskan 1 gelas air putih hangat sesudah makan..."
+                    <textarea name="catatan_tambahan" rows="2" placeholder="Contoh: Olahraga dilakukan bersama teman-teman sekolah, berhasil mencapai 3.000 langkah..."
                         class="w-full p-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all"></textarea>
                 </div>
 
-                <!-- Unggah Foto Makanan -->
+                <!-- Unggah Foto Kegiatan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
-                        Unggah Foto Makanan <span class="text-slate-400 font-normal">(Opsional)</span>
+                        Unggah Foto Dokumentasi <span class="text-slate-400 font-normal">(Opsional)</span>
                     </label>
                     <div class="flex items-center justify-center w-full">
                         <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-all relative overflow-hidden">

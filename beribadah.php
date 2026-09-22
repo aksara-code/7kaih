@@ -65,19 +65,27 @@
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilihan Ibadah</label>
+                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
                     <div id="prayerOptions" class="grid grid-cols-2 gap-2">
-                        <button type="button" data-prayer="Subuh" class="prayer-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Sholat Subuh</button>
-                        <button type="button" data-prayer="Dzuhur" class="prayer-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Sholat Dzuhur</button>
-                        <button type="button" data-prayer="Ashar" class="prayer-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Sholat Ashar</button>
-                        <button type="button" data-prayer="Maghrib" class="prayer-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Sholat Maghrib</button>
-                        <button type="button" data-prayer="Isya" class="prayer-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50">Sholat Isya</button>
+                        <button type="button" data-option="Sholat Subuh" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Subuh</button>
+                        <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                        <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                        <button type="button" data-option="Sholat Maghrib" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Maghrib</button>
+                        <button type="button" data-option="Sholat Isya" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Isya</button>
                     </div>
                 </div>
 
                 <div>
                     <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Catatan Ibadah</label>
                     <textarea id="activityNote" rows="3" placeholder="Tuliskan pengalaman ibadah hari ini..." class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100"></textarea>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan</label>
+                    <input id="imageInput" type="file" accept="image/*" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
+                    <div id="imagePreviewWrapper" class="mt-3 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
+                        <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview ibadah" />
+                    </div>
                 </div>
 
                 <div class="mt-5 flex items-center justify-between gap-3">
@@ -102,7 +110,17 @@
         const activityForm = document.getElementById('activityForm');
         const entryDate = document.getElementById('entryDate');
         const entryTime = document.getElementById('entryTime');
-        const prayerOptions = document.querySelectorAll('.prayer-option');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
+        const optionButtons = document.querySelectorAll('.option-btn');
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function (char) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return map[char];
+            });
+        }
 
         function setAutoDateTime() {
             const now = new Date();
@@ -110,50 +128,8 @@
             entryTime.value = now.toTimeString().slice(0, 5);
         }
 
-        function getPrayerLabel(timeString) {
-            const [hours, minutes] = timeString.split(':').map(Number);
-            const totalMinutes = hours * 60 + minutes;
-
-            if (totalMinutes >= 0 && totalMinutes < 5 * 60) {
-                return 'Sholat Subuh';
-            }
-            if (totalMinutes >= 5 * 60 && totalMinutes < 12 * 60) {
-                return 'Sholat Dzuhur';
-            }
-            if (totalMinutes >= 12 * 60 && totalMinutes < 15 * 60) {
-                return 'Sholat Ashar';
-            }
-            if (totalMinutes >= 15 * 60 && totalMinutes < 18 * 60) {
-                return 'Sholat Maghrib';
-            }
-            if (totalMinutes >= 18 * 60) {
-                return 'Sholat Isya';
-            }
-            return 'Sholat';
-        }
-
-        function syncPrayerSelection() {
-            const currentPrayer = getPrayerLabel(entryTime.value || new Date().toTimeString().slice(0, 5));
-            prayerOptions.forEach(button => {
-                const isCurrent = button.dataset.prayer === currentPrayer.replace('Sholat ', '');
-                const isSelected = button.classList.contains('selected');
-
-                button.disabled = !isCurrent && !isSelected;
-                button.classList.toggle('bg-emerald-100', isCurrent || isSelected);
-                button.classList.toggle('border-emerald-500', isCurrent || isSelected);
-                button.classList.toggle('text-emerald-700', isCurrent || isSelected);
-                button.classList.toggle('selected', isSelected);
-
-                if (isCurrent && !isSelected) {
-                    button.classList.add('selected');
-                    button.disabled = false;
-                }
-            });
-        }
-
         function openModal() {
             setAutoDateTime();
-            syncPrayerSelection();
             addModal.classList.remove('hidden');
             addModal.classList.add('flex');
         }
@@ -167,6 +143,31 @@
             const date = new Date(value + 'T00:00:00');
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
         }
+
+        function handleImageSelect() {
+            const file = imageInput.files && imageInput.files[0];
+            if (!file) {
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                imagePreview.src = event.target.result;
+                imagePreviewWrapper.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        optionButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
+                button.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+            });
+        });
+
+        imageInput.addEventListener('change', handleImageSelect);
 
         function renderHistory() {
             const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -182,48 +183,52 @@
 
             historyList.innerHTML = items.map(item => `
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
                             <p class="text-sm font-bold text-slate-800">${formatDate(item.date)}</p>
-                            <p class="text-xs text-slate-500">${item.time} • ${item.summary}</p>
-                            ${item.note ? `<p class="mt-1 text-xs text-slate-600">${item.note}</p>` : ''}
+                            <p class="text-xs text-slate-500">${item.time} • ${item.option || 'Ibadah'}</p>
+                            ${item.note ? `<p class="mt-1 text-xs text-slate-600">${escapeHtml(item.note)}</p>` : ''}
                         </div>
                         <span class="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Tercatat</span>
                     </div>
+                    ${item.image ? `<img src="${item.image}" class="mt-3 h-32 w-full rounded-xl object-cover" alt="Foto kegiatan ibadah" />` : ''}
                 </div>
             `).join('');
         }
 
-        prayerOptions.forEach(button => {
-            button.addEventListener('click', () => {
-                if (button.disabled) return;
-                prayerOptions.forEach(item => {
-                    item.classList.remove('selected', 'bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
-                    item.disabled = item !== button;
-                });
-                button.classList.add('selected', 'bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
-            });
-        });
-
         activityForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const selectedPrayer = document.querySelector('.prayer-option.selected')?.dataset.prayer || getPrayerLabel(entryTime.value || new Date().toTimeString().slice(0, 5)).replace('Sholat ', '');
-            const currentTime = entryTime.value || new Date().toTimeString().slice(0, 5);
+            const selectedPrayer = document.querySelector('.option-btn.bg-emerald-100')?.dataset.option;
+            const selected = selectedPrayer || 'Ibadah';
+            const file = imageInput.files && imageInput.files[0];
+            const reader = new FileReader();
 
-            const entry = {
-                date: entryDate.value,
-                time: currentTime,
-                summary: `Sholat ${selectedPrayer}`,
-                note: document.getElementById('activityNote').value.trim()
+            reader.onload = function (event) {
+                const entry = {
+                    date: entryDate.value,
+                    time: entryTime.value,
+                    option: selected,
+                    summary: selected,
+                    note: document.getElementById('activityNote').value.trim(),
+                    image: file ? event.target.result : ''
+                };
+
+                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                items.unshift(entry);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                renderHistory();
+                activityForm.reset();
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                closeModal();
             };
 
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            items.unshift(entry);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-            renderHistory();
-            activityForm.reset();
-            closeModal();
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                reader.onload({ target: { result: '' } });
+            }
         });
 
         openAddModalBtn.addEventListener('click', openModal);

@@ -65,8 +65,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Topik Belajar</label>
-                    <input id="activityText" type="text" placeholder="Matematika, IPA, bahasa" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
+                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Nama Kegiatan</label>
+                    <input id="manualActivity" type="text" placeholder="Contoh: membaca, mencatat, latihan, mengulang" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
                 </div>
 
                 <div>
@@ -76,43 +76,9 @@
 
                 <div>
                     <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan</label>
-                    <div class="flex items-center justify-between rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3">
-                        <span class="text-sm text-slate-600">Pilih File</span>
-                        <label class="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                            Pilih
-                            <input type="file" class="hidden" />
-                        </label>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Indikator Belajar</label>
-                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-lg">✅</span>
-                            <span class="text-sm font-semibold text-slate-700">Membaca</span>
-                        </div>
-                        <span class="relative h-7 w-12 rounded-full bg-emerald-500 block">
-                            <span class="absolute right-1 top-1 h-5 w-5 rounded-full bg-white"></span>
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-lg">📝</span>
-                            <span class="text-sm font-semibold text-slate-700">Mencatat</span>
-                        </div>
-                        <span class="relative h-7 w-12 rounded-full bg-emerald-500 block">
-                            <span class="absolute right-1 top-1 h-5 w-5 rounded-full bg-white"></span>
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100 text-lg">📘</span>
-                            <span class="text-sm font-semibold text-slate-700">Latihan</span>
-                        </div>
-                        <span class="relative h-7 w-12 rounded-full bg-slate-300 block">
-                            <span class="absolute left-1 top-1 h-5 w-5 rounded-full bg-white"></span>
-                        </span>
+                    <input id="imageInput" type="file" accept="image/*" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
+                    <div id="imagePreviewWrapper" class="mt-3 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
+                        <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview belajar" />
                     </div>
                 </div>
 
@@ -138,6 +104,17 @@
         const activityForm = document.getElementById('activityForm');
         const entryDate = document.getElementById('entryDate');
         const entryTime = document.getElementById('entryTime');
+        const manualActivity = document.getElementById('manualActivity');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function (char) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return map[char];
+            });
+        }
 
         function setAutoDateTime() {
             const now = new Date();
@@ -161,6 +138,24 @@
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
         }
 
+        function handleImageSelect() {
+            const file = imageInput.files && imageInput.files[0];
+            if (!file) {
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                imagePreview.src = event.target.result;
+                imagePreviewWrapper.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        imageInput.addEventListener('change', handleImageSelect);
+
         function renderHistory() {
             const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
@@ -175,14 +170,15 @@
 
             historyList.innerHTML = items.map(item => `
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
                             <p class="text-sm font-bold text-slate-800">${formatDate(item.date)}</p>
-                            <p class="text-xs text-slate-500">${item.time} • ${item.summary}</p>
-                            ${item.note ? `<p class="mt-1 text-xs text-slate-600">${item.note}</p>` : ''}
+                            <p class="text-xs text-slate-500">${item.time} • ${item.option || 'Belajar'}</p>
+                            ${item.note ? `<p class="mt-1 text-xs text-slate-600">${escapeHtml(item.note)}</p>` : ''}
                         </div>
                         <span class="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">Tercatat</span>
                     </div>
+                    ${item.image ? `<img src="${item.image}" class="mt-3 h-32 w-full rounded-xl object-cover" alt="Foto kegiatan belajar" />` : ''}
                 </div>
             `).join('');
         }
@@ -190,19 +186,36 @@
         activityForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const entry = {
-                date: entryDate.value,
-                time: entryTime.value,
-                summary: document.getElementById('activityText').value.trim() || 'Belajar',
-                note: document.getElementById('activityNote').value.trim()
+            const selected = manualActivity.value.trim() || 'Belajar';
+            const file = imageInput.files && imageInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const entry = {
+                    date: entryDate.value,
+                    time: entryTime.value,
+                    option: selected,
+                    summary: selected,
+                    note: document.getElementById('activityNote').value.trim(),
+                    image: file ? event.target.result : ''
+                };
+
+                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                items.unshift(entry);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                renderHistory();
+                activityForm.reset();
+                manualActivity.value = '';
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                closeModal();
             };
 
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            items.unshift(entry);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-            renderHistory();
-            activityForm.reset();
-            closeModal();
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                reader.onload({ target: { result: '' } });
+            }
         });
 
         openAddModalBtn.addEventListener('click', openModal);

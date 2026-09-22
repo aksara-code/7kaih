@@ -77,9 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Ambil 5 Riwayat Aktivitas Bermasyarakat Terakhir
+// Ambil Riwayat Aktivitas Bermasyarakat
 try {
-    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'bermasyarakat' ORDER BY waktu_mulai DESC LIMIT 5");
+    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'bermasyarakat' ORDER BY waktu_mulai DESC");
     $stmt_riwayat->execute(['id_siswa' => $siswa_id]);
     $riwayat_list = $stmt_riwayat->fetchAll();
 } catch (\PDOException $e) {
@@ -124,39 +124,119 @@ try {
                 </span>
             </div>
 
-           <div class="text-center">
-    <!-- Wadah Putih dengan Gambar Logo -->
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
-        <img src="logo_bermasyarakat-removebg-preview.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
+            <div class="text-center">
+                <!-- Wadah Putih dengan Gambar Logo -->
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
+                    <img src="logo_bermasyarakat-removebg-preview.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                    Kegiatan Bermasyarakat
+                </h1>
+                <p class="text-xs font-semibold text-emerald-100 mt-1">
+                    Catat aksi sosial dan kepedulian lingkunganmu hari ini
+                </p>
+            </div>
+        </div>
     </div>
-    <h1 class="text-2xl font-extrabold tracking-tight text-white">
-        Kegiatan Bermasyarakat
-    </h1>
-    <p class="text-xs font-semibold text-emerald-100 mt-1">
-        Catat aksi sosial dan kepedulian lingkunganmu hari ini
-    </p>
-</div>
 
-    <!-- Container Utama Form -->
-    <div class="w-full max-w-xl mx-auto px-4 -mt-12 mb-auto z-20">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-300/60 border border-slate-200">
+    <!-- Container Utama Halaman -->
+    <div class="w-full max-w-xl mx-auto px-4 -mt-10 mb-auto z-20 space-y-4">
+        
+        <!-- Baris Tombol Aksi & Notifikasi -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-md border border-slate-200">
+            <div>
+                <h2 class="text-sm font-extrabold text-slate-800">Riwayat Bermasyarakat</h2>
+                <p class="text-[11px] font-semibold text-slate-500">Daftar aksi sosial yang telah kamu catat</p>
+            </div>
+            <!-- Tombol Baru untuk Membuka Pop-Up Form -->
+            <button onclick="toggleModal(true)" type="button" 
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-800/20 transition-all active:scale-95">
+                <i class="fa-solid fa-plus text-sm"></i> Baru
+            </button>
+        </div>
+
+        <!-- Pesan Notifikasi Error / Sukses -->
+        <?php if (!empty($error)): ?>
+            <div class="bg-red-100 border-l-4 border-red-600 text-red-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3 shadow-sm">
+                <i class="fa-solid fa-circle-exclamation text-base text-red-600 shrink-0"></i>
+                <span><?= htmlspecialchars($error) ?></span>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($success)): ?>
+            <div class="bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3 shadow-sm">
+                <i class="fa-solid fa-circle-check text-base text-emerald-600 shrink-0"></i>
+                <span><?= htmlspecialchars($success) ?></span>
+            </div>
+        <?php endif; ?>
+
+        <!-- Section Tampilan Data / Empty State -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-300/60 border border-slate-200">
+            <?php if (empty($riwayat_list)): ?>
+                <!-- Tampilan Jika Siswa Belum Mengisi Data -->
+                <div class="text-center py-10 px-4">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fa-solid fa-folder-open text-3xl text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 mb-1">Kamu belum mengisi data</h3>
+                    <p class="text-xs text-slate-500 font-semibold max-w-xs mx-auto mb-5">
+                        Belum ada catatan kegiatan bermasyarakat. Klik tombol di bawah untuk menambahkan kegiatan pertama kamu!
+                    </p>
+                    <button onclick="toggleModal(true)" type="button" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all">
+                        <i class="fa-solid fa-plus"></i> Tambah Kegiatan
+                    </button>
+                </div>
+            <?php else: ?>
+                <!-- Tampilan Daftar Riwayat Kegiatan -->
+                <div class="space-y-3">
+                    <?php foreach ($riwayat_list as $item): ?>
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="space-y-1">
+                                <p class="text-xs font-extrabold text-emerald-800">
+                                    <i class="fa-solid fa-calendar-day mr-1"></i>
+                                    <?= date('d M Y, H:i', strtotime($item['waktu_mulai'])) ?>
+                                    <?php if ($item['waktu_selesai']): ?>
+                                        — <?= date('H:i', strtotime($item['waktu_selesai'])) ?>
+                                    <?php endif; ?>
+                                </p>
+                                <p class="text-sm font-bold text-slate-800 line-clamp-2">
+                                    <?= htmlspecialchars($item['deskripsi']) ?>
+                                </p>
+                                <?php if (!empty($item['catatan_tambahan'])): ?>
+                                    <p class="text-xs text-slate-500 font-semibold italic">
+                                        "<?= htmlspecialchars($item['catatan_tambahan']) ?>"
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
+                                <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" class="shrink-0">
+                                    <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" class="w-12 h-12 rounded-xl object-cover border border-slate-300 shadow-sm hover:scale-105 transition-all">
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- POP-UP MODAL FORM -->
+    <div id="modalForm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-8">
             
-            <!-- Pesan Notifikasi Error / Sukses -->
-            <?php if (!empty($error)): ?>
-                <div class="mb-5 bg-red-100 border-l-4 border-red-600 text-red-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3">
-                    <i class="fa-solid fa-circle-exclamation text-base text-red-600 shrink-0"></i>
-                    <span><?= htmlspecialchars($error) ?></span>
-                </div>
-            <?php endif; ?>
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-emerald-700"></i> Tambah Kegiatan Bermasyarakat
+                </h3>
+                <button onclick="toggleModal(false)" type="button" class="text-slate-400 hover:text-slate-600 transition-all p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
 
-            <?php if (!empty($success)): ?>
-                <div class="mb-5 bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3">
-                    <i class="fa-solid fa-circle-check text-base text-emerald-600 shrink-0"></i>
-                    <span><?= htmlspecialchars($success) ?></span>
-                </div>
-            <?php endif; ?>
-
-            <form action="bermasyarakat.php" method="POST" enctype="multipart/form-data" class="space-y-5">
+            <!-- Body Form Modal -->
+            <form action="bermasyarakat.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                 
                 <!-- Waktu Mulai & Selesai -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -213,56 +293,18 @@ try {
                     </div>
                 </div>
 
-                <!-- Tombol Submit -->
-                <button type="submit" 
-                    class="w-full py-4 px-6 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold text-sm sm:text-base rounded-xl shadow-lg shadow-emerald-800/30 transition-all duration-150 active:scale-[0.98]">
-                    <i class="fa-solid fa-paper-plane mr-2"></i> Simpan Catatan Kegiatan
-                </button>
+                <!-- Footer / Tombol Aksi Modal -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button onclick="toggleModal(false)" type="button" 
+                        class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                        class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-800/30 transition-all">
+                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Simpan Catatan
+                    </button>
+                </div>
             </form>
-        </div>
-
-        <!-- Section Riwayat Kegiatan Bermasyarakat -->
-        <div class="mt-8 bg-white rounded-3xl p-6 shadow-lg border border-slate-200">
-            <h2 class="text-base font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left text-emerald-700"></i> Riwayat Kegiatan Terakhir
-            </h2>
-
-            <?php if (empty($riwayat_list)): ?>
-                <div class="text-center py-6 text-slate-500">
-                    <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
-                    <p class="text-xs font-bold">Belum ada riwayat kegiatan bermasyarakat.</p>
-                </div>
-            <?php else: ?>
-                <div class="space-y-3">
-                    <?php foreach ($riwayat_list as $item): ?>
-                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div class="space-y-1">
-                                <p class="text-xs font-extrabold text-emerald-800">
-                                    <i class="fa-solid fa-calendar-day mr-1"></i>
-                                    <?= date('d M Y, H:i', strtotime($item['waktu_mulai'])) ?>
-                                    <?php if ($item['waktu_selesai']): ?>
-                                        — <?= date('H:i', strtotime($item['waktu_selesai'])) ?>
-                                    <?php endif; ?>
-                                </p>
-                                <p class="text-sm font-bold text-slate-800 line-clamp-2">
-                                    <?= htmlspecialchars($item['deskripsi']) ?>
-                                </p>
-                                <?php if (!empty($item['catatan_tambahan'])): ?>
-                                    <p class="text-xs text-slate-500 font-semibold italic">
-                                        "<?= htmlspecialchars($item['catatan_tambahan']) ?>"
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-
-                            <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
-                                <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" class="shrink-0">
-                                    <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" class="w-12 h-12 rounded-xl object-cover border border-slate-300 shadow-sm hover:scale-105 transition-all">
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 
@@ -273,8 +315,17 @@ try {
         </p>
     </footer>
 
-    <!-- Script Preview Gambar Upload -->
+    <!-- Script JavaScript untuk Control Pop-Up Modal & Preview Foto -->
     <script>
+        function toggleModal(show) {
+            const modal = document.getElementById('modalForm');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
         function previewAktivitasFoto(event) {
             const reader = new FileReader();
             const output = document.getElementById('previewFotoAktivitas');
@@ -290,6 +341,11 @@ try {
                 reader.readAsDataURL(event.target.files[0]);
             }
         }
+
+        // Buka modal secara otomatis jika terdapat error saat mengirim form
+        <?php if (!empty($error)): ?>
+            toggleModal(true);
+        <?php endif; ?>
     </script>
 </body>
 </html>

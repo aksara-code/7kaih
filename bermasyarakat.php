@@ -9,8 +9,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'siswa') {
 }
 
 $siswa_id = $_SESSION['user_id'];
-$error    = '';
-$success  = '';
+
+// Ambil notifikasi dari session (PRG Pattern) lalu langsung hapus agar hanya muncul sekali
+$error   = $_SESSION['error'] ?? '';
+$success = $_SESSION['success'] ?? '';
+unset($_SESSION['error'], $_SESSION['success']);
 
 // Proses Submit Form Log Bermasyarakat
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -69,7 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'foto'             => $foto_name
                 ]);
 
-                $success = 'Catatan kegiatan bermasyarakat berhasil disimpan!';
+                // Simpan pesan sukses ke session dan lakukan redirect (Pattern PRG)
+                $_SESSION['success'] = 'Catatan kegiatan bermasyarakat berhasil disimpan!';
+                header("Location: bermasyarakat.php");
+                exit();
+
             } catch (\PDOException $e) {
                 $error = 'Gagal menyimpan catatan: ' . $e->getMessage();
             }
@@ -135,18 +142,15 @@ try {
 
     <!-- Header Atas -->
     <div class="bg-emerald-800 text-white pt-8 pb-20 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-        <!-- Pattern Hiasan Tipis -->
         <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-700/50 rounded-full blur-xl pointer-events-none"></div>
         <div class="absolute -left-10 -top-10 w-40 h-40 bg-emerald-600/30 rounded-full blur-xl pointer-events-none"></div>
 
         <div class="max-w-xl mx-auto relative z-10">
-            <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between mb-4">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
                 </a>
                 
-                <!-- Tombol + Baru Mengarahkan ke Pop Up Form -->
                 <button onclick="toggleModal(true)" type="button" 
                     class="inline-flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-plus text-xs"></i> Baru
@@ -154,7 +158,6 @@ try {
             </div>
 
             <div class="text-center">
-                <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
                     <img src="img/logo_bermasyarakat.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
                 </div>
@@ -189,7 +192,6 @@ try {
         <!-- Section Tampilan Data / Empty State -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-300/60 border border-slate-200">
             <?php if (empty($riwayat_list)): ?>
-                <!-- Tampilan Jika Siswa Belum Mengisi Data -->
                 <div class="text-center py-10 px-4">
                     <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fa-solid fa-folder-open text-3xl text-emerald-600"></i>
@@ -200,12 +202,10 @@ try {
                     </p>
                 </div>
             <?php else: ?>
-                <!-- Tampilan Daftar Riwayat Kegiatan -->
                 <div class="space-y-4">
                     <?php foreach ($riwayat_list as $item): ?>
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-row items-start justify-between gap-4">
                             
-                            <!-- Bagian Kiri: Informasi Teks & Kalimat Memanjang ke Bawah -->
                             <div class="flex-1 min-w-0 space-y-1.5">
                                 <p class="text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
                                     <i class="fa-solid fa-calendar-day"></i>
@@ -230,7 +230,6 @@ try {
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Bagian Kanan: Foto Kegiatan (UKURAN DIPERBESAR: w-24 h-24 / sm:w-28 sm:h-28) -->
                             <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
                                 <div class="shrink-0">
                                     <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Dokumentasi">
@@ -245,12 +244,11 @@ try {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- KOMPONEN PAGINATION (SESUAI GAMBAR ACUAN) -->
+                <!-- KOMPONEN PAGINATION -->
                 <?php if ($total_pages > 1): ?>
                     <div class="mt-6 pt-2">
                         <div class="flex items-center justify-between bg-slate-50/80 p-2 rounded-2xl border border-slate-200/80 shadow-sm">
                             
-                            <!-- Tombol Prev -->
                             <?php if ($page > 1): ?>
                                 <a href="?page=<?= $page - 1 ?>" 
                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
@@ -262,12 +260,10 @@ try {
                                 </span>
                             <?php endif; ?>
 
-                            <!-- Badge Halaman Saat Ini -->
                             <div class="px-4 py-1.5 bg-slate-200/60 rounded-xl text-xs font-extrabold text-slate-700 tracking-wide">
                                 Hal <?= $page ?> / <?= $total_pages ?>
                             </div>
 
-                            <!-- Tombol Next -->
                             <?php if ($page < $total_pages): ?>
                                 <a href="?page=<?= $page + 1 ?>" 
                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
@@ -291,7 +287,6 @@ try {
     <div id="modalForm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-8">
             
-            <!-- Header Modal -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                 <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square text-emerald-700"></i> Tambah Kegiatan Bermasyarakat
@@ -301,10 +296,8 @@ try {
                 </button>
             </div>
 
-            <!-- Body Form Modal -->
             <form action="bermasyarakat.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                 
-                <!-- Waktu Mulai & Selesai -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
@@ -323,7 +316,6 @@ try {
                     </div>
                 </div>
 
-                <!-- Deskripsi Kegiatan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Deskripsi Kegiatan <span class="text-red-500">*</span>
@@ -332,7 +324,6 @@ try {
                         class="w-full p-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all"></textarea>
                 </div>
 
-                <!-- Catatan Tambahan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Catatan Tambahan <span class="text-slate-400 font-normal">(Opsional)</span>
@@ -341,7 +332,6 @@ try {
                         class="w-full p-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all"></textarea>
                 </div>
 
-                <!-- Unggah Foto Kegiatan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Unggah Foto Dokumentasi <span class="text-slate-400 font-normal">(Opsional)</span>
@@ -359,7 +349,6 @@ try {
                     </div>
                 </div>
 
-                <!-- Footer / Tombol Aksi Modal -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button onclick="toggleModal(false)" type="button" 
                         class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">
@@ -381,7 +370,7 @@ try {
         </p>
     </footer>
 
-    <!-- Script JavaScript untuk Control Pop-Up Modal & Preview Foto -->
+    <!-- Script JavaScript -->
     <script>
         function toggleModal(show) {
             const modal = document.getElementById('modalForm');
@@ -408,7 +397,6 @@ try {
             }
         }
 
-        // Buka modal secara otomatis jika terdapat error saat mengirim form
         <?php if (!empty($error)): ?>
             toggleModal(true);
         <?php endif; ?>

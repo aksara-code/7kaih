@@ -107,7 +107,7 @@ try {
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col justify-between antialiased text-slate-800 pb-10">
 
-    <!-- Header Atas (Hijau Emerald Kontras) -->
+    <!-- Header Atas -->
     <div class="bg-emerald-800 text-white pt-8 pb-20 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
         <!-- Pattern Hiasan Tipis -->
         <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-700/50 rounded-full blur-xl pointer-events-none"></div>
@@ -128,7 +128,7 @@ try {
             </div>
 
             <div class="text-center">
-                <!-- Wadah Putih dengan Gambar Logo -->
+                <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
                     <img src="logo_bermasyarakat-removebg-preview.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
                 </div>
@@ -163,7 +163,7 @@ try {
         <!-- Section Tampilan Data / Empty State -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-300/60 border border-slate-200">
             <?php if (empty($riwayat_list)): ?>
-                <!-- Tampilan Jika Siswa Belum Mengisi Data (Tanpa Tombol Tambah/Double) -->
+                <!-- Tampilan Jika Siswa Belum Mengisi Data -->
                 <div class="text-center py-10 px-4">
                     <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fa-solid fa-folder-open text-3xl text-emerald-600"></i>
@@ -174,33 +174,47 @@ try {
                     </p>
                 </div>
             <?php else: ?>
-                <!-- Tampilan Daftar Riwayat Kegiatan -->
-                <div class="space-y-3">
+                <!-- Tampilan Daftar Riwayat Kegiatan (Kalimat di Kiri, Foto di Kanan) -->
+                <div class="space-y-4">
                     <?php foreach ($riwayat_list as $item): ?>
-                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div class="space-y-1">
-                                <p class="text-xs font-extrabold text-emerald-800">
-                                    <i class="fa-solid fa-calendar-day mr-1"></i>
-                                    <?= date('d M Y, H:i', strtotime($item['waktu_mulai'])) ?>
-                                    <?php if ($item['waktu_selesai']): ?>
-                                        — <?= date('H:i', strtotime($item['waktu_selesai'])) ?>
-                                    <?php endif; ?>
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-row items-start justify-between gap-4">
+                            
+                            <!-- Bagian Kiri: Informasi Teks & Kalimat Memanjang ke Bawah -->
+                            <div class="flex-1 min-w-0 space-y-1.5">
+                                <p class="text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-calendar-day"></i>
+                                    <span>
+                                        <?= date('d M Y, H:i', strtotime($item['waktu_mulai'])) ?>
+                                        <?php if ($item['waktu_selesai']): ?>
+                                            — <?= date('H:i', strtotime($item['waktu_selesai'])) ?>
+                                        <?php endif; ?>
+                                    </span>
                                 </p>
-                                <p class="text-sm font-bold text-slate-800 line-clamp-2">
-                                    <?= htmlspecialchars($item['deskripsi']) ?>
+                                
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 break-words leading-relaxed">
+                                    <?= nl2br(htmlspecialchars($item['deskripsi'])) ?>
                                 </p>
+
                                 <?php if (!empty($item['catatan_tambahan'])): ?>
-                                    <p class="text-xs text-slate-500 font-semibold italic">
-                                        "<?= htmlspecialchars($item['catatan_tambahan']) ?>"
-                                    </p>
+                                    <div class="pt-1">
+                                        <p class="text-[11px] sm:text-xs text-slate-500 font-semibold italic break-words bg-slate-100/80 p-2 rounded-lg border-l-2 border-emerald-600">
+                                            "<?= nl2br(htmlspecialchars($item['catatan_tambahan'])) ?>"
+                                        </p>
+                                    </div>
                                 <?php endif; ?>
                             </div>
 
+                            <!-- Bagian Kanan: Foto Kegiatan -->
                             <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
-                                <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" class="shrink-0">
-                                    <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" class="w-12 h-12 rounded-xl object-cover border border-slate-300 shadow-sm hover:scale-105 transition-all">
-                                </a>
+                                <div class="shrink-0">
+                                    <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Dokumentasi">
+                                        <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" 
+                                             alt="Foto Kegiatan" 
+                                             class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200">
+                                    </a>
+                                </div>
                             <?php endif; ?>
+
                         </div>
                     <?php endforeach; ?>
                 </div>

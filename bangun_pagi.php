@@ -65,13 +65,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Nama Kegiatan</label>
-                    <input id="manualActivity" type="text" placeholder="Contoh: mandi, sarapan, berdoa, siap sekolah" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Catatan Harian</label>
-                    <textarea id="activityNote" rows="3" placeholder="Tuliskan pengalaman hari ini..." class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100"></textarea>
+                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Deskripsi</label>
+                    <textarea id="activityNote" rows="3" placeholder="Tuliskan kegiatan sebelum/sesudah bangun pagi..." class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100"></textarea>
                 </div>
 
                 <div>
@@ -104,7 +99,6 @@
         const activityForm = document.getElementById('activityForm');
         const entryDate = document.getElementById('entryDate');
         const entryTime = document.getElementById('entryTime');
-        const manualActivity = document.getElementById('manualActivity');
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
@@ -186,7 +180,7 @@
         activityForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const selected = manualActivity.value.trim() || 'Bangun pagi';
+            const selected = 'Bangun pagi';
             const file = imageInput.files && imageInput.files[0];
             const reader = new FileReader();
 
@@ -205,7 +199,6 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
                 renderHistory();
                 activityForm.reset();
-                manualActivity.value = '';
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();

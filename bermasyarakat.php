@@ -156,7 +156,7 @@ try {
             <div class="text-center">
                 <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
-                    <img src="logo_bermasyarakat.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
+                    <img src="img/logo_bermasyarakat.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white">
                     Kegiatan Bermasyarakat

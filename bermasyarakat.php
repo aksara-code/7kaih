@@ -77,13 +77,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Ambil Riwayat Aktivitas Bermasyarakat
+// LOGIKA PAGINATION (MAX 5 DATA PER HALAMAN)
+$limit = 5;
+$page  = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
 try {
-    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'bermasyarakat' ORDER BY waktu_mulai DESC");
-    $stmt_riwayat->execute(['id_siswa' => $siswa_id]);
+    // 1. Hitung Total Data untuk Halaman
+    $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'bermasyarakat'");
+    $stmt_count->execute(['id_siswa' => $siswa_id]);
+    $total_records = $stmt_count->fetchColumn();
+
+    $total_pages = ceil($total_records / $limit);
+    if ($total_pages < 1) $total_pages = 1;
+
+    // Pastikan halaman tidak melebihi batas total halaman
+    if ($page > $total_pages && $total_records > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    // 2. Ambil 5 Data Terbaru Berdasarkan Limit dan Offset
+    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'bermasyarakat' ORDER BY waktu_mulai DESC LIMIT :limit OFFSET :offset");
+    $stmt_riwayat->bindValue(':id_siswa', $siswa_id, PDO::PARAM_INT);
+    $stmt_riwayat->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt_riwayat->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt_riwayat->execute();
     $riwayat_list = $stmt_riwayat->fetchAll();
+
 } catch (\PDOException $e) {
-    $riwayat_list = [];
+    $riwayat_list  = [];
+    $total_records = 0;
+    $total_pages   = 1;
 }
 ?>
 <!DOCTYPE html>
@@ -130,7 +156,7 @@ try {
             <div class="text-center">
                 <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
-<img src="/logo_bermasyarakat.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
+                    <img src="logo_bermasyarakat.png" alt="Logo Bermasyarakat" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white">
                     Kegiatan Bermasyarakat
@@ -174,7 +200,7 @@ try {
                     </p>
                 </div>
             <?php else: ?>
-                <!-- Tampilan Daftar Riwayat Kegiatan (Kalimat di Kiri, Foto di Kanan) -->
+                <!-- Tampilan Daftar Riwayat Kegiatan -->
                 <div class="space-y-4">
                     <?php foreach ($riwayat_list as $item): ?>
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-row items-start justify-between gap-4">
@@ -204,13 +230,13 @@ try {
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Bagian Kanan: Foto Kegiatan -->
+                            <!-- Bagian Kanan: Foto Kegiatan (UKURAN DIPERBESAR: w-24 h-24 / sm:w-28 sm:h-28) -->
                             <?php if (!empty($item['foto']) && file_exists('uploads/aktivitas/' . $item['foto'])): ?>
                                 <div class="shrink-0">
                                     <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Dokumentasi">
                                         <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" 
                                              alt="Foto Kegiatan" 
-                                             class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200">
+                                             class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-white shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200">
                                     </a>
                                 </div>
                             <?php endif; ?>
@@ -218,6 +244,45 @@ try {
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <!-- KOMPONEN PAGINATION (SESUAI GAMBAR ACUAN) -->
+                <?php if ($total_pages > 1): ?>
+                    <div class="mt-6 pt-2">
+                        <div class="flex items-center justify-between bg-slate-50/80 p-2 rounded-2xl border border-slate-200/80 shadow-sm">
+                            
+                            <!-- Tombol Prev -->
+                            <?php if ($page > 1): ?>
+                                <a href="?page=<?= $page - 1 ?>" 
+                                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
+                                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Prev
+                                </a>
+                            <?php else: ?>
+                                <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100/60 text-slate-300 rounded-xl font-bold text-xs cursor-not-allowed">
+                                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Prev
+                                </span>
+                            <?php endif; ?>
+
+                            <!-- Badge Halaman Saat Ini -->
+                            <div class="px-4 py-1.5 bg-slate-200/60 rounded-xl text-xs font-extrabold text-slate-700 tracking-wide">
+                                Hal <?= $page ?> / <?= $total_pages ?>
+                            </div>
+
+                            <!-- Tombol Next -->
+                            <?php if ($page < $total_pages): ?>
+                                <a href="?page=<?= $page + 1 ?>" 
+                                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
+                                    Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                </a>
+                            <?php else: ?>
+                                <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100/60 text-slate-300 rounded-xl font-bold text-xs cursor-not-allowed">
+                                    Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                </span>
+                            <?php endif; ?>
+
+                        </div>
+                    </div>
+                <?php endif; ?>
+
             <?php endif; ?>
         </div>
     </div>

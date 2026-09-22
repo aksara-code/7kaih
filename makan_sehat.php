@@ -12,16 +12,25 @@ $siswa_id = $_SESSION['user_id'];
 $error    = '';
 $success  = '';
 
+// Cek notifikasi sukses dari URL (Post-Redirect-Get)
+if (isset($_GET['status']) && $_GET['status'] === 'success') {
+    $success = 'Catatan makan sehat & bergizi berhasil disimpan!';
+}
+
 // Proses Submit Form Log Makan Sehat
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $waktu_mulai      = $_POST['waktu_mulai'] ?? '';
-    $waktu_selesai    = !empty($_POST['waktu_selesai']) ? $_POST['waktu_selesai'] : null;
-    $deskripsi        = trim($_POST['deskripsi'] ?? '');
-    $catatan_tambahan = trim($_POST['catatan_tambahan'] ?? '');
-    $kategori         = 'makan_sehat';
+    $waktu_mulai_raw   = $_POST['waktu_mulai'] ?? '';
+    $waktu_selesai_raw = $_POST['waktu_selesai'] ?? '';
+    $deskripsi         = trim($_POST['deskripsi'] ?? '');
+    $catatan_tambahan  = trim($_POST['catatan_tambahan'] ?? '');
+    $kategori          = 'makan_sehat';
+
+    // Format datetime agar sesuai standar MySQL (YYYY-MM-DD HH:MM:SS)
+    $waktu_mulai   = !empty($waktu_mulai_raw) ? date('Y-m-d H:i:s', strtotime($waktu_mulai_raw)) : '';
+    $waktu_selesai = !empty($waktu_selesai_raw) ? date('Y-m-d H:i:s', strtotime($waktu_selesai_raw)) : null;
 
     // Validasi input
-    if (empty($waktu_mulai)) {
+    if (empty($waktu_mulai_raw)) {
         $error = 'Waktu makan wajib diisi!';
     } elseif (empty($deskripsi)) {
         $error = 'Deskripsi makanan/menu sehat wajib diisi!';
@@ -69,7 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'foto'             => $foto_name
                 ]);
 
-                $success = 'Catatan makan sehat & bergizi berhasil disimpan!';
+                // Redirect ke halaman yang sama agar data langsung ter-refresh dan muncul di daftar
+                header("Location: makan_sehat.php?status=success");
+                exit();
             } catch (\PDOException $e) {
                 $error = 'Gagal menyimpan catatan: ' . $e->getMessage();
             }
@@ -84,26 +95,22 @@ if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
 try {
-    // 1. Hitung Total Data untuk Halaman
+    // 1. Hitung Total Data
     $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan_sehat'");
     $stmt_count->execute(['id_siswa' => $siswa_id]);
-    $total_records = $stmt_count->fetchColumn();
+    $total_records = (int)$stmt_count->fetchColumn();
 
     $total_pages = ceil($total_records / $limit);
     if ($total_pages < 1) $total_pages = 1;
 
-    // Pastikan halaman tidak melebihi batas total halaman
     if ($page > $total_pages && $total_records > 0) {
         $page = $total_pages;
         $offset = ($page - 1) * $limit;
     }
 
-    // 2. Ambil 5 Data Terbaru Berdasarkan Limit dan Offset
-    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan_sehat' ORDER BY waktu_mulai DESC LIMIT :limit OFFSET :offset");
-    $stmt_riwayat->bindValue(':id_siswa', $siswa_id, PDO::PARAM_INT);
-    $stmt_riwayat->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt_riwayat->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt_riwayat->execute();
+    // 2. Ambil Data Terbaru Berdasarkan Limit dan Offset
+    $stmt_riwayat = $pdo->prepare("SELECT * FROM log_aktivitas WHERE id_siswa = :id_siswa AND kategori = 'makan_sehat' ORDER BY waktu_mulai DESC LIMIT $limit OFFSET $offset");
+    $stmt_riwayat->execute(['id_siswa' => $siswa_id]);
     $riwayat_list = $stmt_riwayat->fetchAll();
 
 } catch (\PDOException $e) {
@@ -135,18 +142,15 @@ try {
 
     <!-- Header Atas -->
     <div class="bg-emerald-800 text-white pt-8 pb-20 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-        <!-- Pattern Hiasan Tipis -->
         <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-700/50 rounded-full blur-xl pointer-events-none"></div>
         <div class="absolute -left-10 -top-10 w-40 h-40 bg-emerald-600/30 rounded-full blur-xl pointer-events-none"></div>
 
         <div class="max-w-xl mx-auto relative z-10">
-            <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between mb-4">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
                 </a>
                 
-                <!-- Tombol + Baru Mengarahkan ke Pop Up Form -->
                 <button onclick="toggleModal(true)" type="button" 
                     class="inline-flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-plus text-xs"></i> Baru
@@ -154,9 +158,8 @@ try {
             </div>
 
             <div class="text-center">
-                <!-- Logo Header -->
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-1 shadow-md mb-2 overflow-hidden">
-                    <img src="img/logo_makan_sehat.png" alt="Logo Makan Sehat" class="w-full h-full object-contain">
+                    <img src="logo_makan_sehat.png" alt="Logo Makan Sehat" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white">
                     Makan Sehat & Bergizi
@@ -205,7 +208,7 @@ try {
                     <?php foreach ($riwayat_list as $item): ?>
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-row items-start justify-between gap-4">
                             
-                            <!-- Bagian Kiri: Informasi Teks & Kalimat Memanjang ke Bawah -->
+                            <!-- Bagian Kiri: Informasi Teks -->
                             <div class="flex-1 min-w-0 space-y-1.5">
                                 <p class="text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
                                     <i class="fa-solid fa-calendar-day"></i>
@@ -323,7 +326,7 @@ try {
                     </div>
                 </div>
 
-                <!-- Deskripsi Makanan / Menu -->
+                <!-- Deskripsi Makanan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Menu / Deskripsi Makanan <span class="text-red-500">*</span>
@@ -337,11 +340,11 @@ try {
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Catatan Tambahan <span class="text-slate-400 font-normal">(Opsional)</span>
                     </label>
-                    <textarea name="catatan_tambahan" rows="2" placeholder="Contoh: Menghabiskan 1 gelas air putih hangat sesudah makan dan mengurangi konsumsi gula..."
+                    <textarea name="catatan_tambahan" rows="2" placeholder="Contoh: Menghabiskan 1 gelas air putih hangat sesudah makan..."
                         class="w-full p-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all"></textarea>
                 </div>
 
-                <!-- Unggah Foto Kegiatan -->
+                <!-- Unggah Foto -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
                         Unggah Foto Makanan <span class="text-slate-400 font-normal">(Opsional)</span>
@@ -359,7 +362,7 @@ try {
                     </div>
                 </div>
 
-                <!-- Footer / Tombol Aksi Modal -->
+                <!-- Footer Modal -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button onclick="toggleModal(false)" type="button" 
                         class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">
@@ -381,7 +384,7 @@ try {
         </p>
     </footer>
 
-    <!-- Script JavaScript untuk Control Pop-Up Modal & Preview Foto -->
+    <!-- Script JavaScript -->
     <script>
         function toggleModal(show) {
             const modal = document.getElementById('modalForm');

@@ -323,7 +323,7 @@ try {
                     </div>
                     <div>
                         <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
-                            Waktu Selesai <span class="text-slate-400 font-normal">(Opsional)</span>
+                            Waktu Selesai <span class="text-slate-400 font-normal"></span>
                         </label>
                         <input type="datetime-local" name="waktu_selesai"
                             class="w-full px-3.5 py-3 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all">
@@ -351,7 +351,7 @@ try {
                 <!-- Unggah Foto Makanan -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
-                        Unggah Foto Makanan <span class="text-slate-400 font-normal">(Opsional)</span>
+                        Unggah Foto Makanan <span class="text-slate-400 font-normal"></span>
                     </label>
                     <div class="flex items-center justify-center w-full">
                         <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-all relative overflow-hidden">

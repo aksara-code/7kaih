@@ -33,14 +33,14 @@
                 </button>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex h-16 w-16 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
+            <div class="flex items-center justify-center gap-4">
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
                     <span aria-label="logo ibadah">🕌</span>
                 </div>
 
-                <div class="flex-1">
-                    <h1 class="text-3xl font-extrabold tracking-[-0.05em] text-white">Beribadah</h1>
-                    <p class="mt-1 text-sm font-medium text-emerald-50">Catat ibadahmu hari ini</p>
+                <div class="min-w-0 text-left">
+                    <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Beribadah</h1>
+                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat ibadahmu hari ini</p>
                 </div>
             </div>
         </div>
@@ -68,12 +68,30 @@
             <form id="activityForm" class="space-y-3">
                 <div>
                     <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
-                    <div id="prayerOptions" class="grid grid-cols-2 gap-2">
-                        <button type="button" data-option="Sholat Subuh" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Subuh</button>
-                        <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
-                        <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
-                        <button type="button" data-option="Sholat Maghrib" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Maghrib</button>
-                        <button type="button" data-option="Sholat Isya" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Isya</button>
+
+                    <div class="space-y-2">
+                        <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <span class="block">Sholat</span>
+                            <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
+                        </button>
+
+                        <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <span class="block">Sholat</span>
+                            <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
+                        </button>
+                    </div>
+
+                    <div id="prayerChoiceWrapper" class="mt-3 hidden">
+                        <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
+                            <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                            <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                        </div>
+
+                        <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
+                            <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
+                            <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
+                            <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                        </div>
                     </div>
                 </div>
 
@@ -111,6 +129,10 @@
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
         const optionButtons = document.querySelectorAll('.option-btn');
+        const prayerGroupButtons = document.querySelectorAll('.prayer-group-btn');
+        const prayerChoiceWrapper = document.getElementById('prayerChoiceWrapper');
+        const siangPrayerOptions = document.getElementById('siangPrayerOptions');
+        const triggeredPrayerOptions = document.getElementById('triggeredPrayerOptions');
         let currentPage = 1;
 
         function setAutoDateTime() {
@@ -121,31 +143,48 @@
             };
         }
 
-        function getPrayerAvailability() {
+        function getActiveTriggeredPrayer() {
             const now = new Date();
             const minutesNow = now.getHours() * 60 + now.getMinutes();
-            const prayerVisibility = {
-                'Sholat Subuh': minutesNow >= 4 * 60 && minutesNow < 6 * 60,
-                'Sholat Dzuhur': true,
-                'Sholat Ashar': true,
-                'Sholat Maghrib': minutesNow >= 17 * 60 + 30 && minutesNow < 19 * 60,
-                'Sholat Isya': minutesNow >= 19 * 60
-            };
-            return prayerVisibility;
+
+            if (minutesNow >= 4 * 60 && minutesNow < 6 * 60) return 'Sholat Subuh';
+            if (minutesNow >= 17 * 60 + 30 && minutesNow < 19 * 60) return 'Sholat Maghrib';
+            if (minutesNow >= 19 * 60) return 'Sholat Isya';
+            return null;
+        }
+
+        function setSelectedPrayer(option) {
+            optionButtons.forEach(item => {
+                const isSelected = item.dataset.option === option;
+                item.classList.toggle('bg-emerald-100', isSelected);
+                item.classList.toggle('border-emerald-500', isSelected);
+                item.classList.toggle('text-emerald-700', isSelected);
+                item.classList.toggle('opacity-60', !isSelected && item.classList.contains('trigger-option'));
+            });
+
+            document.querySelectorAll('.trigger-option').forEach(button => {
+                const active = button.dataset.option === option;
+                button.disabled = true;
+                button.classList.toggle('bg-emerald-100', active);
+                button.classList.toggle('border-emerald-500', active);
+                button.classList.toggle('text-emerald-700', active);
+                button.classList.toggle('opacity-60', !active);
+                button.classList.toggle('cursor-not-allowed', true);
+            });
         }
 
         function refreshPrayerButtons() {
-            const visibility = getPrayerAvailability();
-            optionButtons.forEach(button => {
-                const show = visibility[button.dataset.option];
-                button.classList.toggle('hidden', !show);
-            });
+            const activeTriggeredPrayer = getActiveTriggeredPrayer();
+            const hasTriggeredPrayer = Boolean(activeTriggeredPrayer);
 
-            if (!document.querySelector('.option-btn:not(.hidden).bg-emerald-100')) {
-                const firstVisible = document.querySelector('.option-btn:not(.hidden)');
-                if (firstVisible) {
-                    firstVisible.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
-                }
+            prayerChoiceWrapper.classList.remove('hidden');
+
+            siangPrayerOptions.classList.add('hidden');
+            triggeredPrayerOptions.classList.add('hidden');
+
+            if (hasTriggeredPrayer) {
+                triggeredPrayerOptions.classList.remove('hidden');
+                setSelectedPrayer(activeTriggeredPrayer);
             }
         }
 
@@ -181,9 +220,50 @@
             reader.readAsDataURL(file);
         }
 
+        prayerGroupButtons.forEach(groupButton => {
+            groupButton.addEventListener('click', function () {
+                const group = groupButton.dataset.group;
+
+                prayerGroupButtons.forEach(btn => {
+                    btn.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+                });
+                groupButton.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+
+                if (group === 'siang') {
+                    siangPrayerOptions.classList.remove('hidden');
+                    triggeredPrayerOptions.classList.add('hidden');
+                    optionButtons.forEach(item => {
+                        const isTriggered = ['Sholat Subuh', 'Sholat Maghrib', 'Sholat Isya'].includes(item.dataset.option);
+                        if (isTriggered) {
+                            item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+                        }
+                    });
+                }
+
+                if (group === 'triggered') {
+                    const activeTriggeredPrayer = getActiveTriggeredPrayer();
+                    siangPrayerOptions.classList.add('hidden');
+                    triggeredPrayerOptions.classList.remove('hidden');
+
+                    if (activeTriggeredPrayer) {
+                        setSelectedPrayer(activeTriggeredPrayer);
+                    }
+                }
+            });
+        });
+
         optionButtons.forEach(button => {
             button.addEventListener('click', function () {
-                optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
+                if (button.classList.contains('trigger-option')) {
+                    return;
+                }
+
+                optionButtons.forEach(item => {
+                    const isTriggered = ['Sholat Subuh', 'Sholat Maghrib', 'Sholat Isya'].includes(item.dataset.option);
+                    if (!isTriggered) {
+                        item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
+                    }
+                });
                 button.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700');
             });
         });
@@ -273,7 +353,7 @@
         activityForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const selectedPrayer = document.querySelector('.option-btn:not(.hidden).bg-emerald-100')?.dataset.option || 'Sholat Dzuhur';
+            const selectedPrayer = document.querySelector('.bg-emerald-100[data-option]')?.dataset.option || getActiveTriggeredPrayer() || 'Sholat Dzuhur';
             const file = imageInput.files && imageInput.files[0];
             const timestamp = setAutoDateTime();
             const reader = new FileReader();

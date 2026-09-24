@@ -33,14 +33,14 @@
                 </button>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex h-16 w-16 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
+            <div class="flex items-center justify-center gap-4">
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
                     <span aria-label="logo belajar">📚</span>
                 </div>
 
-                <div class="flex-1">
-                    <h1 class="text-3xl font-extrabold tracking-[-0.05em] text-white">Gemar Belajar</h1>
-                    <p class="mt-1 text-sm font-medium text-emerald-50">Catat materi dan ilmu yang kamu dapatkan</p>
+                <div class="min-w-0 text-left">
+                    <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Gemar Belajar</h1>
+                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat materi dan ilmu yang kamu dapatkan</p>
                 </div>
             </div>
         </div>

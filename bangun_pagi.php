@@ -35,8 +35,12 @@
             </div>
 
             <div class="flex items-center justify-center gap-4">
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
-                    <span aria-label="logo bangun pagi">☀️</span>
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-lg shadow-emerald-900/10">
+                    <img
+                        src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/1-bangun-pagi.png"
+                        alt="logo bangun pagi"
+                        class="h-full w-full object-cover"
+                    />
                 </div>
 
                 <div class="min-w-0 text-left">

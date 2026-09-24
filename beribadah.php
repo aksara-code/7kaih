@@ -34,8 +34,12 @@
             </div>
 
             <div class="flex items-center justify-center gap-4">
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] bg-white text-[2rem] shadow-lg shadow-emerald-900/10">
-                    <span aria-label="logo ibadah">🕌</span>
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-lg shadow-emerald-900/10">
+                    <img
+                        src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/2-beribadah.png"
+                        alt="logo beribadah"
+                        class="h-full w-full object-cover"
+                    />
                 </div>
 
                 <div class="min-w-0 text-left">
@@ -69,28 +73,30 @@
                 <div>
                     <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
 
-                    <div class="space-y-2">
-                        <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
-                            <span class="block">Sholat</span>
-                            <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
-                        </button>
+                    <div class="space-y-3">
+                        <div class="space-y-2">
+                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                                <span class="block">Sholat</span>
+                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
+                            </button>
 
-                        <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
-                            <span class="block">Sholat</span>
-                            <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
-                        </button>
-                    </div>
-
-                    <div id="prayerChoiceWrapper" class="mt-3 hidden">
-                        <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                            <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
-                            <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                            <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
+                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                            </div>
                         </div>
 
-                        <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                            <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
-                            <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
-                            <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                        <div class="space-y-2">
+                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                                <span class="block">Sholat</span>
+                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
+                            </button>
+
+                            <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
+                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
+                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
+                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -213,7 +213,7 @@ try {
                 <!-- Tampilan Jika Siswa Belum Mengisi Data -->
                 <div class="text-center py-6 px-3">
                     <div class="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <i class="fa-solid fa-people-hold text-2xl text-emerald-600"></i>
+                        <i class="fa-solid fa-people-group text-2xl text-emerald-600"></i>
                     </div>
                     <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 mb-1">Kamu belum mengisi data</h3>
                     <p class="text-[11px] sm:text-xs text-slate-500 font-medium max-w-xs mx-auto leading-relaxed">
@@ -256,7 +256,7 @@ try {
                                 <div class="shrink-0">
                                     <a href="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" target="_blank" title="Lihat Foto Dokumentasi">
                                         <img src="uploads/aktivitas/<?= htmlspecialchars($item['foto']) ?>" 
-                                             alt="Foto Kegiatan" 
+                                             alt="Foto Kegiatan (Wajib Diisi)" 
                                              class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-white shadow-sm hover:scale-105 transition-all duration-200">
                                     </a>
                                 </div>

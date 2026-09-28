@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bangun Pagi</title>
+    <title>Tidur Cepat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,15 +37,15 @@
             <div class="flex items-center justify-center gap-4">
                 <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-lg shadow-emerald-900/10">
                     <img
-                        src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/1-bangun-pagi.png"
-                        alt="logo bangun pagi"
+                        src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/7-tidur-cepat.png"
+                        alt="logo tidur cepat"
                         class="h-full w-full object-cover"
                     />
                 </div>
 
                 <div class="min-w-0 text-left">
-                    <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Bangun Pagi</h1>
-                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat kebiasaan bangun tidurmu hari ini</p>
+                    <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Tidur Cepat</h1>
+                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat rutinitas tidur malammu</p>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
-                <h2 class="mt-1 text-xl font-extrabold text-slate-800">Kegiatan Bangun Pagi</h2>
+                <h2 class="mt-1 text-xl font-extrabold text-slate-800">Kegiatan Tidur</h2>
             </div>
 
             <div id="historyList" class="space-y-3"></div>
@@ -66,7 +66,7 @@
     <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
         <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-4 flex items-center justify-between gap-3">
-                <h2 class="text-xl font-extrabold text-slate-800">Tambah Aktivitas</h2>
+                <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
             </div>
 
@@ -79,7 +79,7 @@
                 </div>
 
                 <div id="imagePreviewWrapper" class="hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                    <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview kegiatan" />
+                    <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview tidur" />
                 </div>
 
                 <div class="flex justify-center">
@@ -95,7 +95,7 @@
                 <input type="hidden" id="capturedImageData" value="">
 
                 <button type="submit" class="w-full rounded-[14px] bg-[#0d6b4e] px-4 py-3 text-base font-bold text-white shadow-lg shadow-emerald-800/20">
-                    Saya sudah bangun pagi
+                    Saya sudah tidur cepat
                 </button>
             </form>
         </div>
@@ -106,7 +106,7 @@
     </footer>
 
     <script>
-        const STORAGE_KEY = 'bangun_pagi_history';
+        const STORAGE_KEY = 'tidur_cepat_history';
         const ITEMS_PER_PAGE = 5;
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
@@ -136,11 +136,6 @@
                 date: now.toISOString().split('T')[0],
                 time: now.toTimeString().slice(0, 5)
             };
-        }
-
-        function formatClock(value) {
-            const date = new Date(`2000-01-01T${value}:00`);
-            return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
         }
 
         function openModal() {
@@ -374,11 +369,11 @@
                             <span aria-hidden="true">✓</span>
                         </div>
                         <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
-                            <span aria-label="ikon bangun pagi">☀️</span>
+                            <span aria-label="ikon tidur cepat">🌙</span>
                         </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan bangun pagi</p>
+                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan tidur cepat</p>
                         <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                            Belum ada data bangun pagi. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
+                            Belum ada data tidur cepat. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>
                     </div>
                 `;
@@ -400,17 +395,17 @@
                                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
                                 <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                 <span class="text-slate-400">•</span>
-                                <span class="font-extrabold text-slate-700">${formatClock(item.time)}</span>
+                                <span class="font-extrabold text-slate-700">${item.time}</span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Bangun pagi'}</p>
+                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Tidur cepat'}</p>
                             <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? item.note : 'Catatan bangun pagi hari ini.'}
+                                ${item.note ? item.note : 'Catatan tidur cepat hari ini.'}
                             </p>
                         </div>
 
                         <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
-                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan bangun pagi" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">☀️</div>'}
+                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan tidur" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">🌙</div>'}
                         </div>
                     </div>
                 </div>
@@ -429,7 +424,7 @@
                 return;
             }
 
-            const selected = 'Bangun pagi';
+            const selected = 'Tidur cepat';
             const timestamp = setAutoDateTime();
             const entry = {
                 date: timestamp.date,

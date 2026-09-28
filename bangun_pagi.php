@@ -52,6 +52,10 @@
     </div>
 
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan bangun pagi berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
@@ -105,12 +109,14 @@
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'bangun_pagi_history';
+        const CATEGORY = 'bangun';
         const ITEMS_PER_PAGE = 5;
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -126,6 +132,8 @@
         const retakeFaceBtn = document.getElementById('retakeFaceBtn');
 
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
         let cameraStream = null;
         let faceDetectionTimer = null;
         let faceDetected = false;
@@ -133,7 +141,7 @@
         function setAutoDateTime() {
             const now = new Date();
             return {
-                date: now.toISOString().split('T')[0],
+                date: ActivityDB.today(),
                 time: now.toTimeString().slice(0, 5)
             };
         }
@@ -141,6 +149,10 @@
         function formatClock(value) {
             const date = new Date(`2000-01-01T${value}:00`);
             return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
         }
 
         function openModal() {
@@ -340,12 +352,17 @@
         }
 
         function renderPager(totalItems) {
-            const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
             if (currentPage > totalPages) currentPage = totalPages;
 
             pager.innerHTML = `
                 <button type="button" id="prevPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage === 1 ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage === 1 ? 'disabled' : ''}><span aria-hidden="true">‹</span> Prev</button>
-                <div class="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#dfeee6] px-4 py-2 text-[11px] font-extrabold tracking-[0.14em] text-slate-700">Hal ${currentPage} / ${totalPages}</div>
+                <div class="inline-flex min-w-[80px] items-center justify-center rounded-full bg-[#dfeee6] px-3 py-1.5 text-[11px] font-extrabold tracking-[0.14em] text-slate-700">${currentPage} / ${totalPages}</div>
                 <button type="button" id="nextPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage >= totalPages ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage >= totalPages ? 'disabled' : ''}>Next <span aria-hidden="true">›</span></button>
             `;
 
@@ -365,19 +382,16 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
-                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
-                        </div>
-                        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
+                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-5 text-center shadow-sm">
+                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
                             <span aria-label="ikon bangun pagi">☀️</span>
                         </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan bangun pagi</p>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                        <p class="text-base font-extrabold text-slate-800">Belum ada catatan bangun pagi</p>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-600">
                             Belum ada data bangun pagi. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>
                     </div>
@@ -403,9 +417,9 @@
                                 <span class="font-extrabold text-slate-700">${formatClock(item.time)}</span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Bangun pagi'}</p>
+                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Bangun pagi')}</p>
                             <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? item.note : 'Catatan bangun pagi hari ini.'}
+                                ${item.note ? escapeHtml(item.note) : 'Catatan bangun pagi hari ini.'}
                             </p>
                         </div>
 
@@ -419,7 +433,7 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const photo = capturedImageData.value;
@@ -429,28 +443,30 @@
                 return;
             }
 
-            const selected = 'Bangun pagi';
             const timestamp = setAutoDateTime();
-            const entry = {
-                date: timestamp.date,
-                time: timestamp.time,
-                option: selected,
-                summary: selected,
-                note: '',
-                image: photo,
-                timestamp: new Date().toISOString()
-            };
-
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            items.unshift(entry);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-            currentPage = 1;
-            renderHistory();
-            activityForm.reset();
-            capturedImageData.value = '';
-            imagePreviewWrapper.classList.add('hidden');
-            imagePreview.src = '';
-            closeModal();
+            try {
+                await ActivityDB.save(CATEGORY, {
+                    date: timestamp.date,
+                    option: 'Bangun pagi',
+                    note: '',
+                    image: photo
+                });
+                currentPage = 1;
+                await loadHistory();
+                activityForm.reset();
+                capturedImageData.value = '';
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                closeModal();
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                cameraStatus.textContent = error.message;
+                cameraStatus.className = 'text-xs font-bold text-red-600';
+            }
         });
 
         captureFaceBtn.addEventListener('click', captureFacePhoto);
@@ -464,7 +480,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

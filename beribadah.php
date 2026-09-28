@@ -51,6 +51,10 @@
     </div>
 
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan ibadah berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
@@ -121,10 +125,12 @@
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'beribadah_history';
+        const CATEGORY = 'ibadah';
         const ITEMS_PER_PAGE = 5;
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -140,11 +146,13 @@
         const siangPrayerOptions = document.getElementById('siangPrayerOptions');
         const triggeredPrayerOptions = document.getElementById('triggeredPrayerOptions');
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
 
         function setAutoDateTime() {
             const now = new Date();
             return {
-                date: now.toISOString().split('T')[0],
+                date: ActivityDB.today(),
                 time: now.toTimeString().slice(0, 5)
             };
         }
@@ -208,6 +216,10 @@
         function formatDate(value) {
             const date = new Date(value + 'T00:00:00');
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
         }
 
         function handleImageSelect() {
@@ -277,6 +289,11 @@
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
             const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
             if (currentPage > totalPages) currentPage = totalPages;
 
@@ -302,14 +319,11 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
                     <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
-                        </div>
                         <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
                             <span aria-label="ikon ibadah">🕌</span>
                         </div>
@@ -340,9 +354,9 @@
                                 <span class="font-extrabold text-slate-700">${item.time}</span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Ibadah'}</p>
+                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Ibadah')}</p>
                             <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? item.note : `Pelaksanaan ${item.option || 'ibadah'} sesuai jadwal.`}
+                                ${item.note ? escapeHtml(item.note) : `Pelaksanaan ${escapeHtml(item.option || 'ibadah')} sesuai jadwal.`}
                             </p>
                         </div>
 
@@ -356,40 +370,33 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selectedPrayer = document.querySelector('.bg-emerald-100[data-option]')?.dataset.option || getActiveTriggeredPrayer() || 'Sholat Dzuhur';
             const file = imageInput.files && imageInput.files[0];
             const timestamp = setAutoDateTime();
-            const reader = new FileReader();
-
-            reader.onload = function () {
-                const entry = {
+            try {
+                await ActivityDB.save(CATEGORY, {
                     date: timestamp.date,
-                    time: timestamp.time,
                     option: selectedPrayer,
-                    summary: selectedPrayer,
                     note: '',
-                    image: file ? reader.result : '',
-                    timestamp: new Date().toISOString()
-                };
-
-                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                items.unshift(entry);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-                renderHistory();
+                    image: file || null
+                });
+                currentPage = 1;
+                await loadHistory();
                 activityForm.reset();
                 optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                reader.onload({ target: { result: '' } });
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                alert(error.message);
             }
         });
 
@@ -402,7 +409,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

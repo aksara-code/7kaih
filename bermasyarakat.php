@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error = 'Format foto tidak valid. Gunakan format JPG, PNG, atau WEBP.';
             }
+        } else {
+            $error = 'Foto gagal diunggah. Silakan pilih ulang foto kegiatan.';
         }
 
         // Simpan ke Database
@@ -194,8 +196,8 @@ try {
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($success)): ?>
-            <div class="bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 p-3.5 rounded-r-xl text-xs font-bold flex items-center gap-2.5 shadow-sm">
+        <?php if (!empty($success) && empty($error)): ?>
+            <div id="successNotification" class="bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 p-3.5 rounded-r-xl text-xs font-bold flex items-center gap-2.5 shadow-sm">
                 <i class="fa-solid fa-circle-check text-sm text-emerald-600 shrink-0"></i>
                 <span><?= htmlspecialchars($success) ?></span>
             </div>
@@ -423,6 +425,11 @@ try {
                 fileNameDisplay.classList.add('text-slate-400');
                 fileNameDisplay.classList.remove('text-slate-700');
             }
+        }
+
+        const successNotification = document.getElementById('successNotification');
+        if (successNotification) {
+            setTimeout(() => successNotification.classList.add('hidden'), 5000);
         }
 
         // Buka modal secara otomatis jika terdapat error saat mengirim form

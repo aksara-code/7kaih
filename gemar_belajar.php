@@ -51,6 +51,10 @@
     </div>
 
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan belajar berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
@@ -105,10 +109,12 @@
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'gemar_belajar_history';
+        const CATEGORY = 'belajar';
         const ITEMS_PER_PAGE = 5;
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -121,6 +127,8 @@
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, function (char) {
@@ -130,8 +138,7 @@
         }
 
         function setAutoDate() {
-            const now = new Date();
-            entryDate.value = now.toISOString().split('T')[0];
+            entryDate.value = ActivityDB.today();
         }
 
         function openModal() {
@@ -169,6 +176,11 @@
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
             const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
             if (currentPage > totalPages) currentPage = totalPages;
 
@@ -194,14 +206,10 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
-                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
-                        </div>
                         <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
                             <span aria-label="ikon belajar">📚</span>
                         </div>
@@ -248,38 +256,31 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selected = manualActivity.value.trim() || 'Belajar';
             const file = imageInput.files && imageInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function (event) {
-                const entry = {
-                    date: entryDate.value || new Date().toISOString().split('T')[0],
-                    time: new Date().toTimeString().slice(0, 5),
+            try {
+                await ActivityDB.save(CATEGORY, {
+                    date: entryDate.value,
                     option: selected,
-                    summary: selected,
                     note: document.getElementById('activityNote').value.trim(),
-                    image: file ? event.target.result : '',
-                    timestamp: new Date().toISOString()
-                };
-
-                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                items.unshift(entry);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-                renderHistory();
+                    image: file || null
+                });
+                currentPage = 1;
+                await loadHistory();
                 activityForm.reset();
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                reader.onload({ target: { result: '' } });
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                alert(error.message);
             }
         });
 
@@ -292,7 +293,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

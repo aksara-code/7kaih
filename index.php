@@ -115,7 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <form action="login.php" method="POST" class="space-y-5">
+            <! -- Perubahan Logika form 
+            <form action="index.php" method="POST" class="space-y-5">
                 
                 <!-- Field Input Identifier -->
                 <div>
@@ -150,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <!-- Opsi Ingat Saya & Lupa Password -->
-                <div class="flex items-center justify-between pt-1">
+                <div class="flex items-center justify-between pt-1 pb-5">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none">
                         <input type="checkbox" name="remember" class="w-4 h-4 text-emerald-700 border-2 border-slate-400 rounded focus:ring-emerald-600">
                         <span class="text-xs font-bold text-slate-700">Ingat saya</span>

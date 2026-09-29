@@ -2,13 +2,23 @@
 session_start();
 require_once 'koneksi.php';
 
+// 1. Jika pengguna sudah memiliki Session login, langsung alihkan ke Dashboard
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
 }
 
 $error = '';
+$success = '';
 
+// Check notifikasi sukses setelah registrasi dari register.php
+if (isset($_GET['status']) && $_GET['status'] === 'success') {
+    $success = 'Pendaftaran berhasil! Silakan masuk dengan akun Anda.';
+} elseif (isset($_GET['registered'])) {
+    $success = 'Pendaftaran berhasil! Silakan login.';
+}
+
+// 2. Proses saat Form Login Dikirimkan
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $identifier = trim($_POST['identifier'] ?? '');
     $password   = $_POST['password'] ?? '';
@@ -17,13 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($identifier) || empty($password)) {
         $error = 'Silakan isi NISN/Username dan password!';
     } else {
-        // Cek tabel siswa
+        // Cek tabel siswa berdasarkan NISN 
+        // BENAR
         $stmt = $pdo->prepare("SELECT * FROM siswa WHERE nisn = :identifier LIMIT 1");
         $stmt->execute(['identifier' => $identifier]);
         $user = $stmt->fetch();
         $role = 'siswa';
 
-        // Jika bukan siswa, cek tabel guru
+        // Jika bukan siswa, cek tabel guru berdasarkan Username atau NIP
         if (!$user) {
             $stmt = $pdo->prepare("SELECT * FROM guru WHERE username = :identifier OR nip = :identifier LIMIT 1");
             $stmt->execute(['identifier' => $identifier]);
@@ -34,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             $password_valid = false;
             
+            // Cek Password Hash PHP atau Plain Text
             if (password_verify($password, $user['password'])) {
                 $password_valid = true;
             } elseif ($password === $user['password']) {
@@ -41,22 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($password_valid) {
+                // Set Session Pengguna
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['role']    = $role;
                 $_SESSION['nama']    = $user['nama'];
 
+                // Jika Opsi "Ingat Saya" Dicentang
                 if ($remember) {
                     $token = bin2hex(random_bytes(16));
                     setcookie('remember_me', $token, time() + (86400 * 30), "/");
                 }
 
+                // Redirect langsung ke Dashboard
                 header("Location: dashboard.php");
                 exit();
             } else {
                 $error = 'Password yang dimasukkan salah!';
             }
         } else {
-            $error = 'NISN atau Username tidak ditemukan!';
+            $error = 'NISN, NIP, atau Username tidak ditemukan!';
         }
     }
 }
@@ -107,6 +122,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Kartu Form Login Putih Kontras -->
         <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-300/60 border border-slate-200">
             
+            <!-- Pesan Sukses Registrasi -->
+            <?php if (!empty($success)): ?>
+                <div class="mb-5 bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-base text-emerald-600 shrink-0"></i>
+                    <span><?= htmlspecialchars($success) ?></span>
+                </div>
+            <?php endif; ?>
+
             <!-- Pesan Error -->
             <?php if (!empty($error)): ?>
                 <div class="mb-5 bg-red-100 border-l-4 border-red-600 text-red-900 p-3.5 rounded-r-xl text-xs sm:text-sm font-bold flex items-center gap-3">
@@ -115,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <! -- Perubahan Logika form 
-            <form action="index.php" method="POST" class="space-y-5">
+            <!-- Form mengarah ke file ini sendiri (action="") -->
+            <form action="" method="POST" class="space-y-5">
                 
                 <!-- Field Input Identifier -->
                 <div>
@@ -127,13 +150,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                             <i class="fa-solid fa-user text-base"></i>
                         </div>
-                        <input type="text" name="identifier" required placeholder="Masukkan NISN atau Username"
+                        <input type="text" name="identifier" required 
+                            autocomplete="username"
+                            placeholder="Masukkan NISN atau Username"
                             value="<?= htmlspecialchars($_POST['identifier'] ?? '') ?>"
                             class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-base sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all">
                     </div>
                 </div>
 
-                <!-- Field Input Password dengan Peak Password -->
+                <!-- Field Input Password dengan Peek Password -->
                 <div>
                     <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-2">
                         Kata Sandi
@@ -142,7 +167,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                             <i class="fa-solid fa-lock text-base"></i>
                         </div>
-                        <input type="password" id="passwordInput" name="password" required placeholder="••••••••"
+                        <input type="password" id="passwordInput" name="password" required 
+                            autocomplete="current-password"
+                            placeholder="••••••••"
                             class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-base sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-all">
                         <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-emerald-700 focus:outline-none min-w-[44px] justify-center">
                             <i class="fa-solid fa-eye text-base" id="eyeIcon"></i>
@@ -151,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <!-- Opsi Ingat Saya & Lupa Password -->
-                <div class="flex items-center justify-between pt-1 pb-5">
+                <div class="flex items-center justify-between pt-1 pb-2">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none">
                         <input type="checkbox" name="remember" class="w-4 h-4 text-emerald-700 border-2 border-slate-400 rounded focus:ring-emerald-600">
                         <span class="text-xs font-bold text-slate-700">Ingat saya</span>
@@ -187,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </p>
     </footer>
 
-    <!-- JavaScript Peak Password -->
+    <!-- JavaScript Toggle Password -->
     <script>
         const passwordInput = document.getElementById('passwordInput');
         const togglePassword = document.getElementById('togglePassword');

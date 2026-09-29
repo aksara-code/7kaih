@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemar Belajar</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
             <div class="mb-5 flex items-center justify-between gap-3">
                 <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
                 <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
@@ -66,8 +67,8 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
-        <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
@@ -210,11 +211,12 @@
 
             if (!items.length) {
                 historyList.innerHTML = `
-                        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
-                            <span aria-label="ikon belajar">📚</span>
+                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
+                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                            <i class="fa-solid fa-book-open text-2xl text-emerald-600" aria-label="Ikon belajar"></i>
                         </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan belajar</p>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                        <p class="text-base font-extrabold text-slate-800">Belum ada catatan belajar</p>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600">
                             Belum ada data belajar. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>
                     </div>

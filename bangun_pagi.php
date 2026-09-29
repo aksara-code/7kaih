@@ -6,6 +6,7 @@
     <title>Bangun Pagi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,7 +26,7 @@
             <div class="mb-5 flex items-center justify-between gap-3">
                 <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
                 <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
@@ -67,8 +68,8 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
-        <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <h2 class="text-xl font-extrabold text-slate-800">Tambah Aktivitas</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
@@ -386,13 +387,13 @@
 
             if (!items.length) {
                 historyList.innerHTML = `
-                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-5 text-center shadow-sm">
-                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
-                            <span aria-label="ikon bangun pagi">☀️</span>
+                    <div class="px-3 py-6 text-center">
+                        <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                            <i class="fa-solid fa-sun text-2xl text-emerald-600" aria-label="Ikon bangun pagi"></i>
                         </div>
-                        <p class="text-base font-extrabold text-slate-800">Belum ada catatan bangun pagi</p>
-                        <p class="mt-1 text-xs leading-relaxed text-slate-600">
-                            Belum ada data bangun pagi. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
+                        <h3 class="mb-1 text-xs font-extrabold text-slate-800 sm:text-sm">Kamu belum mengisi data</h3>
+                        <p class="mx-auto max-w-xs text-[11px] font-medium leading-relaxed text-slate-500 sm:text-xs">
+                            Belum ada catatan bangun pagi. Klik tombol <strong>"Baru"</strong> di bagian atas untuk menambahkan kegiatan.
                         </p>
                     </div>
                 `;

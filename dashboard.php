@@ -1,5 +1,32 @@
 <?php
 session_start();
+require_once 'koneksi.php';
+
+$role = $_SESSION['role'] ?? '';
+$user = [
+    'nama'  => $_SESSION['nama'] ?? 'Siswa',
+    'kelas' => $role === 'guru' ? 'Guru' : 'Siswa'
+];
+
+if (isset($_SESSION['user_id'])) {
+    if ($role === 'siswa') {
+        $stmt_user = $pdo->prepare("SELECT s.nama, k.nama_kelas AS kelas FROM siswa s LEFT JOIN kelas k ON s.id_kelas = k.id WHERE s.id = :id LIMIT 1");
+    } elseif ($role === 'guru') {
+        $stmt_user = $pdo->prepare("SELECT g.nama, k.nama_kelas AS kelas FROM guru g LEFT JOIN kelas k ON g.id_kelas = k.id WHERE g.id = :id LIMIT 1");
+    }
+
+    if (isset($stmt_user)) {
+        $stmt_user->execute(['id' => $_SESSION['user_id']]);
+        $profile = $stmt_user->fetch();
+
+        if ($profile) {
+            $user['nama'] = $profile['nama'];
+            $user['kelas'] = $profile['kelas'] ?? $user['kelas'];
+            $_SESSION['nama'] = $profile['nama'];
+        }
+    }
+}
+
 if (isset($_SESSION['success'])) {
     echo "<script>alert('" . $_SESSION['success'] . "');</script>";
     unset($_SESSION['success']);

@@ -6,6 +6,7 @@
     <title>Tidur Cepat - Kebiasaan Anak Indonesia Hebat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -33,7 +34,7 @@
             <div class="mb-6 flex items-center justify-between gap-3">
                 <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
-                    <span>Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
                 <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-50 active:scale-95">
@@ -66,27 +67,23 @@
             Catatan kegiatan tidur cepat berhasil disimpan!
         </div>
 
-        <div class="rounded-[28px] border border-slate-200/80 bg-white/95 p-5 shadow-[0_16px_35px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-            <div class="mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
-                        Jurnal Harian
-                    </span>
-                    <h2 class="mt-1.5 text-lg font-extrabold text-slate-800">Kegiatan Tidur</h2>
-                </div>
+        <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
+            <div class="mb-4">
+                <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
+                <h2 class="mt-1 text-xl font-extrabold text-slate-800">Kegiatan Tidur</h2>
             </div>
 
             <!-- Dynamic List -->
             <div id="historyList" class="space-y-3"></div>
 
             <!-- Pagination -->
-            <div id="pager" class="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4"></div>
+            <div id="pager" class="mt-4 flex items-center justify-between gap-3"></div>
         </div>
     </main>
 
     <!-- Modal Form Tambah Kegiatan -->
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/60 p-3 backdrop-blur-sm sm:items-center">
-        <div class="w-full max-w-md rounded-[28px] bg-white p-5 shadow-2xl transition-all">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl transition-all">
             <!-- Modal Header -->
             <div class="mb-4 flex items-center justify-between">
                 <div>
@@ -424,13 +421,13 @@
 
             if (!items.length) {
                 historyList.innerHTML = `
-                    <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center">
-                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100/80 text-2xl text-emerald-700">
-                            🌙
+                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
+                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600">
+                            <i class="fa-solid fa-moon text-2xl text-white" aria-label="Ikon tidur cepat"></i>
                         </div>
-                        <h3 class="text-base font-extrabold text-slate-800">Belum Ada Records</h3>
+                        <h3 class="text-base font-extrabold text-slate-800">Kamu Belum Mengisi Data</h3>
                         <p class="mt-1 text-xs leading-relaxed text-slate-500">
-                            Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan catatan tidur cepat harimu.
+                            Belum ada data tidur. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan catatan tidur cepat harimu.
                         </p>
                     </div>
                 `;

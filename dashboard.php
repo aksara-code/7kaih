@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Jakarta');
 require_once 'koneksi.php';
 
 $role = $_SESSION['role'] ?? '';
@@ -24,6 +25,40 @@ if (isset($_SESSION['user_id'])) {
             $user['kelas'] = $profile['kelas'] ?? $user['kelas'];
             $_SESSION['nama'] = $profile['nama'];
         }
+    }
+}
+
+$completedHabitsToday = 0;
+$streakDays = 0;
+
+if ($role === 'siswa' && isset($_SESSION['user_id'])) {
+    $habitCategories = ['bangun', 'tidur', 'ibadah', 'belajar', 'makan', 'olahraga', 'bermasyarakat'];
+    $categoryList = "'" . implode("','", $habitCategories) . "'";
+    $stmt_progress = $pdo->prepare(
+        "SELECT DATE(waktu_mulai) AS activity_date, COUNT(DISTINCT kategori) AS completed_count
+         FROM log_aktivitas
+         WHERE id_siswa = :id_siswa AND kategori IN ($categoryList)
+         GROUP BY DATE(waktu_mulai)
+         ORDER BY activity_date DESC"
+    );
+    $stmt_progress->execute(['id_siswa' => $_SESSION['user_id']]);
+
+    $dailyCompletions = [];
+    foreach ($stmt_progress->fetchAll() as $dailyActivity) {
+        $dailyCompletions[$dailyActivity['activity_date']] = (int) $dailyActivity['completed_count'];
+    }
+
+    $today = date('Y-m-d');
+    $completedHabitsToday = $dailyCompletions[$today] ?? 0;
+    $streakDate = new DateTimeImmutable($today);
+
+    if ($completedHabitsToday < count($habitCategories)) {
+        $streakDate = $streakDate->modify('-1 day');
+    }
+
+    while (($dailyCompletions[$streakDate->format('Y-m-d')] ?? 0) === count($habitCategories)) {
+        $streakDays++;
+        $streakDate = $streakDate->modify('-1 day');
     }
 }
 
@@ -157,12 +192,12 @@ $habits = [
                 </div>
                 <div class="mt-3 flex items-center justify-between">
                     <div>
-                        <p class="text-2xl font-black text-white tracking-tight">7 / 7</p>
-                        <p class="text-[11px] text-emerald-200 font-medium mt-0.5">Kebiasaan Tercapai</p>
+                        <p class="text-2xl font-black text-white tracking-tight"><?= $completedHabitsToday ?> / 7</p>
+                        <p class="text-[11px] text-emerald-200 font-medium mt-0.5">Kebiasaan Terisi</p>
                     </div>
                     <div class="text-right">
                         <span class="px-3 py-1 bg-emerald-500/30 border border-emerald-400/40 rounded-xl text-xs font-bold text-emerald-100 inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-fire text-amber-400"></i> Streak 5 Hari
+                            <i class="fa-solid fa-fire text-amber-400"></i> Streak <?= $streakDays ?> Hari
                         </span>
                     </div>
                 </div>

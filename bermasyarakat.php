@@ -158,7 +158,7 @@ try {
             <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
                 
                 <!-- Tombol + Baru -->
@@ -317,7 +317,7 @@ try {
             <!-- Header Modal -->
             <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
                 <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-emerald-700"></i> Tambah Kegiatan Bermasyarakat
+                    <i class="fa-solid fa-pen-to-square text-emerald-700"></i> Tambah Kegiatan
                 </h3>
                 <button onclick="toggleModal(false)" type="button" class="text-slate-400 hover:text-slate-600 transition-all p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>

@@ -215,7 +215,7 @@
                         <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
                             <i class="fa-solid fa-book-open text-2xl text-emerald-600" aria-label="Ikon belajar"></i>
                         </div>
-                        <p class="text-base font-extrabold text-slate-800">Belum ada catatan belajar</p>
+                        <p class="text-base font-extrabold text-slate-800">Kamu belum mengisi data</p>
                         <p class="mt-2 text-xs leading-relaxed text-slate-600">
                             Belum ada data belajar. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>

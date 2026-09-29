@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="max-w-xl mx-auto relative z-10">
             <div class="mb-4 flex items-center">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
             </div>
             <div class="text-center">

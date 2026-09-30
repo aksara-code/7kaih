@@ -67,56 +67,56 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden gitems-center justify-center bg-slate-900/40 p-3">
-        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-3 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
             </div>
 
-            <form id="activityForm" class="space-y-3">
+            <form id="activityForm" class="space-y-2">
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
+                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
 
-                    <div class="space-y-3">
+                    <div id="prayerChoiceWrapper" class="space-y-2">
                         <div class="space-y-2">
-                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
                                 <span class="block">Sholat</span>
-                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
+                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
                             </button>
 
                             <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
-                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
                                 <span class="block">Sholat</span>
-                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
+                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
                             </button>
 
                             <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
-                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
-                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
+                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
+                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
-                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
-                    <div id="imagePreviewWrapper" class="mt-3 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                        <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview ibadah" />
+                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
+                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white" />
+                    <div id="imagePreviewWrapper" class="mt-2 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
+                        <img id="imagePreview" class="h-32 w-full object-cover" alt="Preview ibadah" />
                     </div>
                 </div>
 
-                <div class="mt-4 flex items-center justify-between gap-3">
-                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">Batal</button>
-                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700">Batal</button>
+                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
                 </div>
             </form>
         </div>

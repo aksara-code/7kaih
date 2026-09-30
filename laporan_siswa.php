@@ -1,6 +1,18 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Jakarta');
 require_once 'koneksi.php';
+
+$habitCategories = [
+    'bangun' => ['title' => 'Bangun Pagi', 'icon' => 'fa-sun'],
+    'ibadah' => ['title' => 'Beribadah', 'icon' => 'fa-hands-praying'],
+    'belajar' => ['title' => 'Gemar Belajar', 'icon' => 'fa-book-open-reader'],
+    'makan' => ['title' => 'Makan Sehat', 'icon' => 'fa-apple-whole'],
+    'olahraga' => ['title' => 'Olahraga', 'icon' => 'fa-person-running'],
+    'bermasyarakat' => ['title' => 'Bermasyarakat', 'icon' => 'fa-people-group'],
+    'tidur' => ['title' => 'Tidur Cepat', 'icon' => 'fa-moon'],
+];
+$activitiesByCategory = array_fill_keys(array_keys($habitCategories), []);
 
 // 1. Cek Autentikasi Pengguna
 if (!isset($_SESSION['user_id'])) {
@@ -47,6 +59,21 @@ if ($siswa_id) {
     ");
     $stmt->execute(['id' => $siswa_id]);
     $siswa = $stmt->fetch();
+
+        if ($siswa) {
+            $categoryPlaceholders = implode(', ', array_fill(0, count($habitCategories), '?'));
+            $stmt_activities = $pdo->prepare(
+                "SELECT kategori, waktu_mulai, deskripsi, catatan_tambahan, foto
+                 FROM log_aktivitas
+                 WHERE id_siswa = ? AND kategori IN ($categoryPlaceholders)
+                 ORDER BY waktu_mulai DESC, id DESC"
+            );
+            $stmt_activities->execute(array_merge([(int) $siswa_id], array_keys($habitCategories)));
+
+            foreach ($stmt_activities->fetchAll() as $activity) {
+                $activitiesByCategory[$activity['kategori']][] = $activity;
+            }
+        }
 }
 ?>
 <!DOCTYPE html>
@@ -89,24 +116,23 @@ if ($siswa_id) {
 <body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between antialiased pb-12">
 
     <!-- Navbar / Action Top Bar (Tidak ikut tercetak) -->
-    <header class="bg-emerald-800 text-white shadow-md no-print">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a href="dashboard.php" class="bg-emerald-700 hover:bg-emerald-600 text-white p-2.5 rounded-xl transition-all flex items-center justify-center w-10 h-10">
-                    <i class="fa-solid fa-arrow-left"></i>
+    <header class="bg-emerald-800 text-white pt-8 pb-16 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden no-print">
+        <div class="max-w-5xl mx-auto relative z-10">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
-                <div>
-                    <h1 class="font-extrabold text-lg sm:text-xl leading-tight">Laporan Data Siswa</h1>
-                    <p class="text-xs text-emerald-200 font-medium">Aplikasi Tujuh Kebiasaan Anak Indonesia Hebat</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <!-- Tombol Cetak / Print -->
                 <button onclick="window.print()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow transition-all">
                     <i class="fa-solid fa-print"></i>
                     <span>Cetak Laporan</span>
                 </button>
+            </div>
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white text-emerald-800 shadow-md mb-2">
+                    <i class="fa-solid fa-file-lines text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white">Laporan Data Siswa</h1>
+                <p class="text-xs font-semibold text-emerald-100 mt-1">Aplikasi Tujuh Kebiasaan Anak Indonesia Hebat</p>
             </div>
         </div>
     </header>
@@ -116,7 +142,7 @@ if ($siswa_id) {
         <!-- Selector Siswa untuk Guru (Tidak ikut tercetak) -->
         <?php if ($user_role === 'guru' && !empty($daftar_siswa)): ?>
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <label for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <label  for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-users text-emerald-700"></i> Pilih Siswa:
                 </label>
                 <select id="select_siswa" onchange="location = this.value;" class="w-full sm:w-80 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
@@ -198,93 +224,42 @@ if ($siswa_id) {
                 <!-- Section Grid Detail Kebiasaan & Preferensi -->
                 <div class="space-y-6">
                     <h4 class="text-base font-extrabold text-emerald-800 uppercase tracking-wider border-b-2 border-emerald-800 pb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-list-check"></i> Kebiasaan & Profil Preferensi Diri
+                        <i class="fa-solid fa-list-check"></i> Kebiasaan & Aktivitas Siswa
                     </h4>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        
-                        <!-- Waktu Tidur & Bangun -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-moon"></i>
+                        <?php foreach ($habitCategories as $category => $habit): ?>
+                            <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
+                                        <i class="fa-solid <?= htmlspecialchars($habit['icon']) ?>"></i>
+                                    </div>
+                                    <span class="text-xs font-extrabold text-slate-800 uppercase"><?= htmlspecialchars($habit['title']) ?></span>
                                 </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Jam Istirahat</span>
-                            </div>
-                            <div class="text-xs text-slate-700 space-y-1 pl-1">
-                                <p>Tidur: <strong class="text-slate-900"><?= htmlspecialchars($siswa['jam_tidur'] ?? '-') ?></strong></p>
-                                <p>Bangun: <strong class="text-slate-900"><?= htmlspecialchars($siswa['jam_bangun'] ?? '-') ?></strong></p>
-                            </div>
-                        </div>
-
-                        <!-- Cita-Cita -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-rocket"></i>
+                                <div class="space-y-3">
+                                    <?php foreach ($activitiesByCategory[$category] as $activity): ?>
+                                        <div class="border-t border-emerald-200/80 pt-3 first:border-t-0 first:pt-0">
+                                            <?php if (!empty($activity['waktu_mulai'])): ?>
+                                                <p class="text-[10px] font-bold text-slate-500"><?= date('d-m-Y H:i', strtotime($activity['waktu_mulai'])) ?> WIB</p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($activity['deskripsi'])): ?>
+                                                <p class="mt-1 text-sm font-semibold text-slate-800 whitespace-pre-line"><?= nl2br(htmlspecialchars($activity['deskripsi'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($activity['catatan_tambahan'])): ?>
+                                                <p class="mt-1 text-xs text-slate-600 whitespace-pre-line"><span class="font-bold">Catatan:</span> <?= nl2br(htmlspecialchars($activity['catatan_tambahan'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                            <?php endif; ?>
+                                            <?php
+                                            $photoName = !empty($activity['foto']) ? basename((string) $activity['foto']) : '';
+                                            $photoPath = __DIR__ . '/uploads/aktivitas/' . $photoName;
+                                            ?>
+                                            <?php if ($photoName !== '' && is_file($photoPath)): ?>
+                                                <img src="uploads/aktivitas/<?= rawurlencode($photoName) ?>" alt="Foto <?= htmlspecialchars($habit['title']) ?>" class="mt-2 h-32 w-full rounded-xl object-cover">
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Cita - Cita</span>
                             </div>
-                            <p class="text-sm font-bold text-slate-900 pl-1"><?= htmlspecialchars($siswa['cita_cita'] ?? '-') ?></p>
-                        </div>
-
-                        <!-- Hobi -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-gamepad"></i>
-                                </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Hobi</span>
-                            </div>
-                            <p class="text-sm font-bold text-slate-900 pl-1"><?= htmlspecialchars($siswa['hobi'] ?? '-') ?></p>
-                        </div>
-
-                        <!-- Olahraga Favorit -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-futbol"></i>
-                                </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Olahraga</span>
-                            </div>
-                            <p class="text-sm font-bold text-slate-900 pl-1"><?= htmlspecialchars($siswa['olahraga'] ?? '-') ?></p>
-                        </div>
-
-                        <!-- Mata Pelajaran Favorit -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-book-open"></i>
-                                </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Mapel Favorit</span>
-                            </div>
-                            <p class="text-sm font-bold text-slate-900 pl-1"><?= htmlspecialchars($siswa['mapel'] ?? '-') ?></p>
-                        </div>
-
-                        <!-- Makanan & Buah Favorit -->
-                        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-utensils"></i>
-                                </div>
-                                <span class="text-xs font-extrabold text-slate-800 uppercase">Makanan & Buah</span>
-                            </div>
-                            <p class="text-xs text-slate-700 pl-1">
-                                Makanan: <strong class="text-slate-900"><?= htmlspecialchars($siswa['makanan'] ?? '-') ?></strong><br>
-                                Buah: <strong class="text-slate-900"><?= htmlspecialchars($siswa['buah'] ?? '-') ?></strong>
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <!-- Keunikan Diri / Catatan Pribadi -->
-                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 mt-4">
-                        <span class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-star text-amber-500"></i> Keunikan Diri Saya
-                        </span>
-                        <p class="text-sm font-semibold text-slate-700 leading-relaxed italic">
-                            "<?= !empty($siswa['keunikan_saya']) ? htmlspecialchars($siswa['keunikan_saya']) : 'Belum diisi' ?>"
-                        </p>
+                        <?php endforeach; ?>
                     </div>
 
                 </div>

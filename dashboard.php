@@ -3,6 +3,17 @@ session_start();
 date_default_timezone_set('Asia/Jakarta');
 require_once 'koneksi.php';
 
+$hour = (int) date('G');
+if ($hour >= 5 && $hour < 11) {
+    $greeting = 'selamat pagi';
+} elseif ($hour >= 11 && $hour < 15) {
+    $greeting = 'selamat siang';
+} elseif ($hour >= 15 && $hour < 18) {
+    $greeting = 'selamat sore';
+} else {
+    $greeting = 'selamat malam';
+}
+
 $role = $_SESSION['role'] ?? '';
 $user = [
     'nama'  => $_SESSION['nama'] ?? 'Siswa',
@@ -166,13 +177,15 @@ $habits = [
 
             <div class="relative z-10 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-emerald-200">Hai,</p>
+                    <p class="text-xs font-semibold text-emerald-200">Hai, <?= htmlspecialchars($greeting) ?></p>
                     <h1 class="text-xl font-extrabold text-white tracking-tight leading-tight">
                         <?= htmlspecialchars($user['nama'] ?? 'Siswa') ?>
                     </h1>
+                    <?php if ($role === 'guru'): ?>
                     <span class="inline-block mt-1 text-[10px] bg-emerald-900/60 text-emerald-200 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        <?= htmlspecialchars($user['kelas'] ?? 'Siswa') ?>
+                        Guru
                     </span>
+                    <?php endif; ?>
                 </div>
                 <div class="flex items-center gap-2">
                     <button class="w-10 h-10 rounded-full bg-emerald-700/60 border border-emerald-600 flex items-center justify-center text-white hover:bg-emerald-700 transition">
@@ -259,7 +272,7 @@ $habits = [
                 <i class="fa-solid fa-house text-lg"></i>
                 <span class="text-[10px] mt-0.5">Beranda</span>
             </a>
-            <a href="#" class="flex flex-col items-center text-slate-400 font-bold hover:text-emerald-700 transition">
+            <a href="laporan_siswa.php" class="flex flex-col items-center text-slate-400 font-bold hover:text-emerald-700 transition">
                 <i class="fa-solid fa-chart-line text-lg"></i>
                 <span class="text-[10px] mt-0.5">Laporan</span>
             </a>

@@ -136,7 +136,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Header Atas (Hijau Kontras) -->
     <div class="bg-emerald-800 text-white pt-8 pb-16 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-        <div class="max-w-xl mx-auto text-center relative z-10">
+        <div class="max-w-xl mx-auto relative z-10">
+            <div class="mb-4 flex items-center">
+                <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
+                </a>
+            </div>
+            <div class="text-center">
             <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white text-emerald-800 shadow-md mb-2">
                 <i class="fa-solid fa-address-card text-2xl"></i>
             </div>
@@ -146,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="text-xs font-semibold text-emerald-100 mt-1">
                 Aplikasi Tujuh Kebiasaan Anak Indonesia Hebat
             </p>
+            </div>
         </div>
     </div>
 

@@ -3,114 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tidur Cepat</title>
+    <title>Tidur Cepat - Kebiasaan Anak Indonesia Hebat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #edf1ee;
+            background-color: #f1f5f3;
+        }
+        .face-guide-box {
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased">
-    <div class="relative overflow-hidden rounded-b-[32px] bg-[#0c6d4d] pb-16 pt-6 shadow-[0_18px_30px_rgba(12,109,77,0.22)]">
-        <div class="absolute -right-12 -top-8 h-36 w-36 rounded-full bg-[#0d7f5a]/30 blur-2xl"></div>
-        <div class="absolute -left-10 bottom-2 h-32 w-32 rounded-full bg-[#0a5e41]/30 blur-2xl"></div>
+<body class="min-h-screen bg-[#f1f5f3] text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
 
-        <div class="relative z-10 mx-auto max-w-md px-4">
-            <div class="mb-5 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
+    <!-- Header Section -->
+    <div class="relative overflow-hidden rounded-b-[36px] bg-gradient-to-br from-[#0c6d4d] via-[#09573d] to-[#06422e] pb-16 pt-7 shadow-[0_20px_40px_rgba(12,109,77,0.25)]">
+        <!-- Ambient Blur Decor -->
+        <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-emerald-300/15 blur-2xl pointer-events-none"></div>
+
+        <div class="relative z-10 mx-auto max-w-md px-5">
+            <!-- Navigation & Action Bar -->
+            <div class="mb-6 flex items-center justify-between gap-3">
+                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
-                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
-                    <span class="text-lg leading-none">＋</span>
+                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-50 active:scale-95">
+                    <span class="text-base leading-none">＋</span>
                     <span>Baru</span>
                 </button>
             </div>
 
-            <div class="flex items-center justify-center gap-4">
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-lg shadow-emerald-900/10">
+            <!-- Title & Branding -->
+            <div class="flex items-center gap-4">
+                <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1 shadow-md shadow-emerald-950/20 ring-4 ring-white/10">
                     <img
                         src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/7-tidur-cepat.png"
-                        alt="logo tidur cepat"
-                        class="h-full w-full object-cover"
+                        alt="Logo Tidur Cepat"
+                        class="h-full w-full object-cover rounded-xl"
                     />
                 </div>
 
-                <div class="min-w-0 text-left">
-                    <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Tidur Cepat</h1>
-                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat rutinitas tidur malammu</p>
+                <div class="min-w-0">
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">Tidur Cepat</h1>
+                    <p class="mt-1 text-xs font-medium text-emerald-100/90 leading-relaxed">Catat & bangun kebiasaan tidur malam yang disiplin</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+    <!-- Main Content Container -->
+    <main class="relative z-20 mx-auto -mt-10 w-full max-w-[480px] px-4 pb-12">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan tidur cepat berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
                 <h2 class="mt-1 text-xl font-extrabold text-slate-800">Kegiatan Tidur</h2>
             </div>
 
+            <!-- Dynamic List -->
             <div id="historyList" class="space-y-3"></div>
+
+            <!-- Pagination -->
             <div id="pager" class="mt-4 flex items-center justify-between gap-3"></div>
         </div>
-    </div>
+    </main>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
-        <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
-            <div class="mb-4 flex items-center justify-between gap-3">
-                <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
-                <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
+    <!-- Modal Form Tambah Kegiatan -->
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl transition-all">
+            <!-- Modal Header -->
+            <div class="mb-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-extrabold text-slate-800">Tambah Catatan Tidur</h2>
+                    <p class="text-xs text-slate-500">Ambil foto verifikasi untuk mencatat kegiatan</p>
+                </div>
+                <button type="button" id="closeAddModalBtn" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition">
+                    ✕
+                </button>
             </div>
 
+            <!-- Form -->
             <form id="activityForm" class="space-y-4">
-                <div class="overflow-hidden rounded-[18px] border border-slate-200 bg-slate-950">
-                    <video id="cameraVideo" autoplay playsinline muted class="h-64 w-full object-cover bg-slate-900"></video>
-                    <div class="bg-slate-50 px-3 py-2">
-                        <p id="cameraStatus" class="text-xs font-semibold text-slate-600">Menyiapkan kamera...</p>
+                <!-- Camera Viewport -->
+                <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-inner">
+                    <video id="cameraVideo" autoplay playsinline muted class="h-60 w-full object-cover"></video>
+                    
+                    <!-- Visual Guide Frame -->
+                    <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <div class="face-guide-box h-40 w-40"></div>
+                    </div>
+
+                    <!-- Status Bar -->
+                    <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-md px-3 py-2 text-center border-t border-white/10">
+                        <p id="cameraStatus" class="text-xs font-semibold text-slate-300">Menyiapkan kamera...</p>
                     </div>
                 </div>
 
-                <div id="imagePreviewWrapper" class="hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                    <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview tidur" />
+                <!-- Preview Area -->
+                <div id="imagePreviewWrapper" class="hidden overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/50 p-2">
+                    <p class="mb-2 text-[11px] font-bold text-emerald-800 text-center">Foto Terverifikasi:</p>
+                    <img id="imagePreview" class="h-40 w-full rounded-xl object-cover shadow-sm" alt="Preview tidur" />
                 </div>
 
-                <div class="flex justify-center">
-                    <button type="button" id="captureFaceBtn" disabled class="w-full rounded-[12px] bg-[#0d6b4e] px-3 py-3 text-sm font-bold text-white opacity-60 transition-all duration-200">
+                <!-- Action Buttons -->
+                <div class="space-y-2.5 pt-1">
+                    <button type="button" id="captureFaceBtn" disabled class="w-full rounded-xl bg-[#0d6b4e] py-3 text-sm font-bold text-white shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0a5840]">
                         Tangkap Gambar
                     </button>
+
+                    <button type="button" id="retakeFaceBtn" class="hidden w-full rounded-xl border border-slate-300 bg-slate-50 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100 transition">
+                        Ambil Foto Ulang
+                    </button>
+
+                    <input type="hidden" id="capturedImageData" value="">
+
+                    <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-[#0c6d4d] to-[#09573d] py-3 text-sm font-extrabold text-white shadow-lg shadow-emerald-900/20 hover:from-[#0a5d42] hover:to-[#074731] active:scale-[0.99] transition">
+                        Saya Sudah Tidur Cepat
+                    </button>
                 </div>
-
-                <button type="button" id="retakeFaceBtn" class="hidden w-full rounded-[12px] border border-[#0d6b4e] bg-white px-3 py-3 text-sm font-bold text-[#0d6b4e]">
-                    Ambil Ulang
-                </button>
-
-                <input type="hidden" id="capturedImageData" value="">
-
-                <button type="submit" class="w-full rounded-[14px] bg-[#0d6b4e] px-4 py-3 text-base font-bold text-white shadow-lg shadow-emerald-800/20">
-                    Saya sudah tidur cepat
-                </button>
             </form>
         </div>
     </div>
 
-    <footer class="py-10 text-center text-sm text-slate-500">
+    <!-- Footer -->
+    <footer class="py-8 text-center text-xs font-medium text-slate-400">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <!-- Logic Script -->
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'tidur_cepat_history';
+        const CATEGORY = 'tidur';
         const ITEMS_PER_PAGE = 5;
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -126,6 +168,8 @@
         const retakeFaceBtn = document.getElementById('retakeFaceBtn');
 
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
         let cameraStream = null;
         let faceDetectionTimer = null;
         let faceDetected = false;
@@ -133,9 +177,13 @@
         function setAutoDateTime() {
             const now = new Date();
             return {
-                date: now.toISOString().split('T')[0],
+                date: ActivityDB.today(),
                 time: now.toTimeString().slice(0, 5)
             };
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
         }
 
         function openModal() {
@@ -184,18 +232,18 @@
 
             if (detection) {
                 faceDetected = true;
-                cameraStatus.textContent = 'Wajah terdeteksi! Silakan ambil foto.';
-                cameraStatus.className = 'text-xs font-bold text-emerald-600';
+                cameraStatus.textContent = '✓ Wajah terdeteksi! Silakan ambil foto.';
+                cameraStatus.className = 'text-xs font-bold text-emerald-400';
                 captureFaceBtn.disabled = false;
-                captureFaceBtn.classList.remove('opacity-60');
+                captureFaceBtn.classList.remove('opacity-50');
                 return;
             }
 
             faceDetected = false;
-            cameraStatus.textContent = 'Mengarahkan wajah ke kamera...';
-            cameraStatus.className = 'text-xs font-semibold text-amber-600';
+            cameraStatus.textContent = 'Posisikan wajah di dalam area kamera...';
+            cameraStatus.className = 'text-xs font-semibold text-amber-300';
             captureFaceBtn.disabled = true;
-            captureFaceBtn.classList.add('opacity-60');
+            captureFaceBtn.classList.add('opacity-50');
         }
 
         function startFaceDetectionLoop() {
@@ -211,13 +259,13 @@
         async function startCamera() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 cameraStatus.textContent = 'Browser ini tidak mendukung kamera.';
-                cameraStatus.className = 'text-xs font-bold text-red-600';
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
                 return;
             }
 
             if (window.location.protocol === 'file:') {
-                cameraStatus.textContent = 'Buka halaman ini melalui http://localhost agar kamera bisa aktif.';
-                cameraStatus.className = 'text-xs font-bold text-red-600';
+                cameraStatus.textContent = 'Buka halaman via HTTP/HTTPS agar kamera dapat diakses.';
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
                 return;
             }
 
@@ -227,7 +275,7 @@
                 }
 
                 cameraStatus.textContent = 'Membuka kamera...';
-                cameraStatus.className = 'text-xs font-semibold text-slate-600';
+                cameraStatus.className = 'text-xs font-semibold text-slate-300';
 
                 const constraints = {
                     video: {
@@ -246,28 +294,28 @@
 
                 cameraVideo.srcObject = cameraStream;
                 await cameraVideo.play();
-                cameraStatus.textContent = 'Memuat model wajah...';
-                cameraStatus.className = 'text-xs font-semibold text-slate-600';
+                cameraStatus.textContent = 'Memuat model analisis wajah...';
+                cameraStatus.className = 'text-xs font-semibold text-slate-300';
 
                 await loadFaceModels();
                 startFaceDetectionLoop();
-                cameraStatus.textContent = 'Mengarahkan wajah ke kamera...';
-                cameraStatus.className = 'text-xs font-semibold text-amber-600';
+                cameraStatus.textContent = 'Posisikan wajah di dalam area kamera...';
+                cameraStatus.className = 'text-xs font-semibold text-amber-300';
             } catch (error) {
-                let message = 'Kamera tidak bisa dibuka. Izinkan akses kamera lalu coba lagi.';
+                let message = 'Kamera tidak dapat diakses. Mohon izinkan akses kamera.';
 
                 if (error && error.name === 'NotAllowedError') {
-                    message = 'Izin kamera ditolak. Buka pengaturan browser dan izinkan kamera untuk localhost, lalu refresh halaman.';
+                    message = 'Izin kamera ditolak. Silakan berikan izin di pengaturan browser.';
                 } else if (error && error.name === 'NotFoundError') {
-                    message = 'Kamera tidak terdeteksi pada perangkat ini.';
+                    message = 'Kamera tidak ditemukan pada perangkat ini.';
                 } else if (error && error.name === 'NotReadableError') {
-                    message = 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi lain lalu coba lagi.';
+                    message = 'Kamera sedang digunakan oleh aplikasi lain.';
                 } else if (error && (error.message || '').includes('Face API')) {
-                    message = 'Model deteksi wajah gagal dimuat. Coba refresh halaman atau cek koneksi internet.';
+                    message = 'Gagal memuat sistem deteksi wajah. Periksa koneksi internet.';
                 }
 
                 cameraStatus.textContent = message;
-                cameraStatus.className = 'text-xs font-bold text-red-600';
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
                 console.error(error);
             }
         }
@@ -289,7 +337,7 @@
 
             faceDetected = false;
             captureFaceBtn.disabled = true;
-            captureFaceBtn.classList.add('opacity-60');
+            captureFaceBtn.classList.add('opacity-50');
             captureFaceBtn.classList.remove('hidden');
             retakeFaceBtn.classList.add('hidden');
             capturedImageData.value = '';
@@ -299,8 +347,8 @@
 
         function captureFacePhoto() {
             if (!faceDetected || !cameraVideo || cameraVideo.readyState < 2) {
-                cameraStatus.textContent = 'Wajah belum terdeteksi, arahkan wajah ke kamera.';
-                cameraStatus.className = 'text-xs font-bold text-red-600';
+                cameraStatus.textContent = 'Wajah belum terdeteksi secara jelas.';
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
                 return;
             }
 
@@ -314,11 +362,10 @@
             capturedImageData.value = imageData;
             imagePreview.src = imageData;
             imagePreviewWrapper.classList.remove('hidden');
-            cameraStatus.textContent = 'Foto berhasil diterima dan siap disimpan.';
-            cameraStatus.className = 'text-xs font-bold text-emerald-600';
+            cameraStatus.textContent = 'Foto terverifikasi dan siap disimpan!';
+            cameraStatus.className = 'text-xs font-bold text-emerald-400';
             captureFaceBtn.disabled = true;
-            captureFaceBtn.classList.add('opacity-60');
-            captureFaceBtn.classList.add('hidden');
+            captureFaceBtn.classList.add('opacity-50', 'hidden');
             retakeFaceBtn.classList.remove('hidden');
         }
 
@@ -328,20 +375,30 @@
             imagePreviewWrapper.classList.add('hidden');
             retakeFaceBtn.classList.add('hidden');
             captureFaceBtn.disabled = false;
-            captureFaceBtn.classList.remove('opacity-60');
-            captureFaceBtn.classList.remove('hidden');
-            cameraStatus.textContent = 'Mengarahkan wajah ke kamera...';
-            cameraStatus.className = 'text-xs font-semibold text-amber-600';
+            captureFaceBtn.classList.remove('opacity-50', 'hidden');
+            cameraStatus.textContent = 'Posisikan wajah di dalam area kamera...';
+            cameraStatus.className = 'text-xs font-semibold text-amber-300';
         }
 
         function renderPager(totalItems) {
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
             const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
             if (currentPage > totalPages) currentPage = totalPages;
 
             pager.innerHTML = `
-                <button type="button" id="prevPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage === 1 ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage === 1 ? 'disabled' : ''}><span aria-hidden="true">‹</span> Prev</button>
-                <div class="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#dfeee6] px-4 py-2 text-[11px] font-extrabold tracking-[0.14em] text-slate-700">Hal ${currentPage} / ${totalPages}</div>
-                <button type="button" id="nextPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage >= totalPages ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage >= totalPages ? 'disabled' : ''}>Next <span aria-hidden="true">›</span></button>
+                <button type="button" id="prevPageBtn" class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition ${currentPage === 1 ? 'pointer-events-none opacity-40' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+                    ‹ Prev
+                </button>
+                <div class="rounded-full bg-slate-100 px-3.5 py-1 text-[11px] font-extrabold text-slate-600">
+                    Halaman ${currentPage} / ${totalPages}
+                </div>
+                <button type="button" id="nextPageBtn" class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition ${currentPage >= totalPages ? 'pointer-events-none opacity-40' : ''}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next ›
+                </button>
             `;
 
             document.getElementById('prevPageBtn')?.addEventListener('click', () => {
@@ -360,20 +417,17 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
                     <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
+                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600">
+                            <i class="fa-solid fa-moon text-2xl text-white" aria-label="Ikon tidur cepat"></i>
                         </div>
-                        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
-                            <span aria-label="ikon tidur cepat">🌙</span>
-                        </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan tidur cepat</p>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                            Belum ada data tidur cepat. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
+                        <h3 class="text-base font-extrabold text-slate-800">Kamu Belum Mengisi Data</h3>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-500">
+                            Belum ada data tidur. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan catatan tidur cepat harimu.
                         </p>
                     </div>
                 `;
@@ -388,24 +442,26 @@
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
             historyList.innerHTML = pageItems.map(item => `
-                <div class="rounded-[22px] border border-[#ebf3ee] bg-[#f9fbfa] p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-                    <div class="flex items-start gap-3">
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
-                                <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                <span class="text-slate-400">•</span>
-                                <span class="font-extrabold text-slate-700">${item.time}</span>
+                <div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-emerald-200 hover:bg-white hover:shadow-md">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                                    📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </span>
+                                <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                    ⏰ ${item.time}
+                                </span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Tidur cepat'}</p>
-                            <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? item.note : 'Catatan tidur cepat hari ini.'}
+                            <h4 class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Tidur cepat')}</h4>
+                            <p class="mt-0.5 text-xs text-slate-500 line-clamp-2">
+                                ${item.note ? escapeHtml(item.note) : 'Catatan verifikasi tidur tepat waktu.'}
                             </p>
                         </div>
 
-                        <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
-                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan tidur" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">🌙</div>'}
+                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
+                            ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto verifikasi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">🌙</div>'}
                         </div>
                     </div>
                 </div>
@@ -414,38 +470,40 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const photo = capturedImageData.value;
             if (!photo) {
-                cameraStatus.textContent = 'Foto belum diambil. Pastikan wajah sudah terdeteksi.';
-                cameraStatus.className = 'text-xs font-bold text-red-600';
+                cameraStatus.textContent = 'Foto belum diambil. Pastikan wajah terdeteksi.';
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
                 return;
             }
 
-            const selected = 'Tidur cepat';
             const timestamp = setAutoDateTime();
-            const entry = {
-                date: timestamp.date,
-                time: timestamp.time,
-                option: selected,
-                summary: selected,
-                note: '',
-                image: photo,
-                timestamp: new Date().toISOString()
-            };
-
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            items.unshift(entry);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-            currentPage = 1;
-            renderHistory();
-            activityForm.reset();
-            capturedImageData.value = '';
-            imagePreviewWrapper.classList.add('hidden');
-            imagePreview.src = '';
-            closeModal();
+            try {
+                await ActivityDB.save(CATEGORY, {
+                    date: timestamp.date,
+                    option: 'Tidur cepat',
+                    note: '',
+                    image: photo
+                });
+                currentPage = 1;
+                await loadHistory();
+                activityForm.reset();
+                capturedImageData.value = '';
+                imagePreviewWrapper.classList.add('hidden');
+                imagePreview.src = '';
+                closeModal();
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                cameraStatus.textContent = error.message;
+                cameraStatus.className = 'text-xs font-bold text-rose-400';
+            }
         });
 
         captureFaceBtn.addEventListener('click', captureFacePhoto);
@@ -459,7 +517,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

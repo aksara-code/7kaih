@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beribadah</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
             <div class="mb-5 flex items-center justify-between gap-3">
                 <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
                 <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
@@ -44,13 +45,17 @@
 
                 <div class="min-w-0 text-left">
                     <h1 class="text-3xl font-extrabold leading-none tracking-[-0.05em] text-white">Beribadah</h1>
-                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat ibadahmu hari ini</p>
+                    <p class="mt-2 text-sm font-medium leading-snug text-emerald-50">Catat waktu ibadahmu hari ini</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan ibadah berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
@@ -62,56 +67,56 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
-        <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-3 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
             </div>
 
-            <form id="activityForm" class="space-y-3">
+            <form id="activityForm" class="space-y-2">
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
+                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
 
-                    <div class="space-y-3">
+                    <div id="prayerChoiceWrapper" class="space-y-2">
                         <div class="space-y-2">
-                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
                                 <span class="block">Sholat</span>
-                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
+                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
                             </button>
 
                             <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
-                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
                                 <span class="block">Sholat</span>
-                                <span class="mt-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
+                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
                             </button>
 
                             <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
-                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
-                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
+                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
+                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
-                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
-                    <div id="imagePreviewWrapper" class="mt-3 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                        <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview ibadah" />
+                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
+                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white" />
+                    <div id="imagePreviewWrapper" class="mt-2 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
+                        <img id="imagePreview" class="h-32 w-full object-cover" alt="Preview ibadah" />
                     </div>
                 </div>
 
-                <div class="mt-4 flex items-center justify-between gap-3">
-                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">Batal</button>
-                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700">Batal</button>
+                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
                 </div>
             </form>
         </div>
@@ -121,10 +126,12 @@
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'beribadah_history';
+        const CATEGORY = 'ibadah';
         const ITEMS_PER_PAGE = 5;
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -140,11 +147,13 @@
         const siangPrayerOptions = document.getElementById('siangPrayerOptions');
         const triggeredPrayerOptions = document.getElementById('triggeredPrayerOptions');
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
 
         function setAutoDateTime() {
             const now = new Date();
             return {
-                date: now.toISOString().split('T')[0],
+                date: ActivityDB.today(),
                 time: now.toTimeString().slice(0, 5)
             };
         }
@@ -208,6 +217,10 @@
         function formatDate(value) {
             const date = new Date(value + 'T00:00:00');
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
         }
 
         function handleImageSelect() {
@@ -277,6 +290,11 @@
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
             const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
             if (currentPage > totalPages) currentPage = totalPages;
 
@@ -302,18 +320,15 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
                     <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
+                        <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                            <i class="fa-solid fa-mosque text-2xl text-emerald-600" aria-label="Ikon ibadah"></i>
                         </div>
-                        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
-                            <span aria-label="ikon ibadah">🕌</span>
-                        </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan ibadah</p>
+                        <p class="text-lg font-extrabold text-slate-800">Kamu belum mengisi data</p>
                         <p class="mt-2 text-sm leading-relaxed text-slate-600">
                             Belum ada data ibadah. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>
@@ -340,9 +355,9 @@
                                 <span class="font-extrabold text-slate-700">${item.time}</span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${item.option || 'Ibadah'}</p>
+                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Ibadah')}</p>
                             <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? item.note : `Pelaksanaan ${item.option || 'ibadah'} sesuai jadwal.`}
+                                ${item.note ? escapeHtml(item.note) : `Pelaksanaan ${escapeHtml(item.option || 'ibadah')} sesuai jadwal.`}
                             </p>
                         </div>
 
@@ -356,40 +371,33 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selectedPrayer = document.querySelector('.bg-emerald-100[data-option]')?.dataset.option || getActiveTriggeredPrayer() || 'Sholat Dzuhur';
             const file = imageInput.files && imageInput.files[0];
             const timestamp = setAutoDateTime();
-            const reader = new FileReader();
-
-            reader.onload = function () {
-                const entry = {
+            try {
+                await ActivityDB.save(CATEGORY, {
                     date: timestamp.date,
-                    time: timestamp.time,
                     option: selectedPrayer,
-                    summary: selectedPrayer,
                     note: '',
-                    image: file ? reader.result : '',
-                    timestamp: new Date().toISOString()
-                };
-
-                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                items.unshift(entry);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-                renderHistory();
+                    image: file || null
+                });
+                currentPage = 1;
+                await loadHistory();
                 activityForm.reset();
                 optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                reader.onload({ target: { result: '' } });
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                alert(error.message);
             }
         });
 
@@ -402,7 +410,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

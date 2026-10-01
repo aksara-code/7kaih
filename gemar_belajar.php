@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemar Belajar</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
             <div class="mb-5 flex items-center justify-between gap-3">
                 <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Beranda</span>
                 </a>
 
                 <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
@@ -51,6 +52,10 @@
     </div>
 
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
+            Catatan kegiatan belajar berhasil disimpan!
+        </div>
+
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
             <div class="mb-4">
                 <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
@@ -62,8 +67,8 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/40 p-3 sm:items-center">
-        <div class="w-full max-w-md rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
+        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
@@ -105,10 +110,12 @@
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
+    <script src="activity-db.js"></script>
     <script>
-        const STORAGE_KEY = 'gemar_belajar_history';
+        const CATEGORY = 'belajar';
         const ITEMS_PER_PAGE = 5;
         const addModal = document.getElementById('addModal');
+        const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
         const closeAddModalBtn = document.getElementById('closeAddModalBtn');
         const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
@@ -121,6 +128,8 @@
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
         let currentPage = 1;
+        let activityItems = [];
+        let successNotificationTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, function (char) {
@@ -130,8 +139,7 @@
         }
 
         function setAutoDate() {
-            const now = new Date();
-            entryDate.value = now.toISOString().split('T')[0];
+            entryDate.value = ActivityDB.today();
         }
 
         function openModal() {
@@ -169,6 +177,11 @@
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
+            if (totalItems < ITEMS_PER_PAGE) {
+                pager.innerHTML = '';
+                return;
+            }
+
             const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
             if (currentPage > totalPages) currentPage = totalPages;
 
@@ -194,19 +207,16 @@
         }
 
         function renderHistory() {
-            const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const items = activityItems;
 
             if (!items.length) {
                 historyList.innerHTML = `
                     <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
-                            <span aria-hidden="true">✓</span>
+                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                            <i class="fa-solid fa-book-open text-2xl text-emerald-600" aria-label="Ikon belajar"></i>
                         </div>
-                        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[2rem] shadow-inner shadow-emerald-100">
-                            <span aria-label="ikon belajar">📚</span>
-                        </div>
-                        <p class="text-lg font-extrabold text-slate-800">Belum ada catatan belajar</p>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                        <p class="text-base font-extrabold text-slate-800">Kamu belum mengisi data</p>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600">
                             Belum ada data belajar. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
                         </p>
                     </div>
@@ -248,38 +258,31 @@
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', function (event) {
+        activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selected = manualActivity.value.trim() || 'Belajar';
             const file = imageInput.files && imageInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function (event) {
-                const entry = {
-                    date: entryDate.value || new Date().toISOString().split('T')[0],
-                    time: new Date().toTimeString().slice(0, 5),
+            try {
+                await ActivityDB.save(CATEGORY, {
+                    date: entryDate.value,
                     option: selected,
-                    summary: selected,
                     note: document.getElementById('activityNote').value.trim(),
-                    image: file ? event.target.result : '',
-                    timestamp: new Date().toISOString()
-                };
-
-                const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                items.unshift(entry);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-                renderHistory();
+                    image: file || null
+                });
+                currentPage = 1;
+                await loadHistory();
                 activityForm.reset();
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                reader.onload({ target: { result: '' } });
+                successNotification.classList.remove('hidden');
+                clearTimeout(successNotificationTimer);
+                successNotificationTimer = setTimeout(() => {
+                    successNotification.classList.add('hidden');
+                }, 5000);
+            } catch (error) {
+                alert(error.message);
             }
         });
 
@@ -292,7 +295,17 @@
             }
         });
 
-        renderHistory();
+        async function loadHistory() {
+            try {
+                activityItems = await ActivityDB.list(CATEGORY);
+                renderHistory();
+            } catch (error) {
+                historyList.textContent = error.message;
+                pager.innerHTML = '';
+            }
+        }
+
+        loadHistory();
     </script>
 </body>
 </html>

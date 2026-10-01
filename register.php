@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mt-6 pt-4 border-t border-slate-200 text-center">
                 <p class="text-xs text-slate-600 font-bold">
                     Sudah memiliki akun? 
-                    <a href="login.php" class="text-emerald-700 font-extrabold hover:text-emerald-900 underline ml-1">
+                    <a href="index.php" class="text-emerald-700 font-extrabold hover:text-emerald-900 underline ml-1">
                         Masuk di Sini
                     </a>
                 </p>

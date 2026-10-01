@@ -263,7 +263,7 @@ $list_kebiasaan = [
                                 </div>
 
                                 <!-- Tombol Laporan -->
-                                <a href="../laporan_siswa.php?id=<?= $s['id'] ?>" class="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-sm">
+                                <a href="laporan_siswa.php?id=<?= $s['id'] ?>" class="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-sm">
                                     <i class="fa-solid fa-file-lines"></i>
                                     <span class="hidden sm:inline">Laporan</span>
                                 </a>

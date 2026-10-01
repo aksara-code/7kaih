@@ -22,6 +22,9 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id   = $_SESSION['user_id'];
 $user_role = $_SESSION['role'] ?? 'siswa';
+$dashboardUrl = $user_role === 'guru'
+    ? (($_SESSION['guru_role'] ?? '') === 'super-user' ? 'admin/dashboard.php' : 'guru/dashboard.php')
+    : 'dashboard.php';
 
 // 2. Penentuan ID Siswa yang akan ditampilkan
 $siswa_id = null;
@@ -119,7 +122,7 @@ if ($siswa_id) {
     <header class="bg-emerald-800 text-white pt-8 pb-16 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden no-print">
         <div class="max-w-5xl mx-auto relative z-10">
             <div class="mb-4 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
+                <a href="<?= htmlspecialchars($dashboardUrl) ?>" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
                 <button onclick="window.print()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow transition-all">

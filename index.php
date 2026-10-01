@@ -2,9 +2,13 @@
 session_start();
 require_once 'koneksi.php';
 
-// 1. Jika pengguna sudah memiliki Session login, langsung alihkan ke Dashboard
+// 1. Jika pengguna sudah memiliki Session login, alihkan sesuai role
 if (isset($_SESSION['user_id'])) {
-    header("Location: dashboard.php");
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'guru') {
+        header("Location: guru/dashboard.php");
+    } else {
+        header("Location: dashboard.php");
+    }
     exit();
 }
 
@@ -25,22 +29,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remember   = isset($_POST['remember']);
 
     if (empty($identifier) || empty($password)) {
-        $error = 'Silakan isi NISN/Username dan password!';
+        $error = 'Silakan isi NISN, NIP, atau Username dan password!';
     } else {
-        // Cek tabel siswa berdasarkan NISN 
-        // BENAR
+        // Cek tabel siswa berdasarkan NISN
         $stmt = $pdo->prepare("SELECT * FROM siswa WHERE nisn = :identifier LIMIT 1");
         $stmt->execute(['identifier' => $identifier]);
         $user = $stmt->fetch();
         $role = 'siswa';
-
+               
         // Jika bukan siswa, cek tabel guru berdasarkan Username atau NIP
-        if (!$user) {
-            $stmt = $pdo->prepare("SELECT * FROM guru WHERE username = :identifier OR nip = :identifier LIMIT 1");
-            $stmt->execute(['identifier' => $identifier]);
-            $user = $stmt->fetch();
-            $role = 'guru';
-        }
+if (!$user) {
+    $stmt = $pdo->prepare("SELECT * FROM guru WHERE username = :id1 OR nip = :id2 LIMIT 1");
+    $stmt->execute([
+        'id1' => $identifier,
+        'id2' => $identifier
+    ]);
+    $user = $stmt->fetch();
+    $role = 'guru';
+}
 
         if ($user) {
             $password_valid = false;
@@ -53,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($password_valid) {
-                // Set Session Pengguna
+                // Set Session Utama Pengguna
                 $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role']    = $role;
+                $_SESSION['role']    = $role; // 'siswa' atau 'guru'
                 $_SESSION['nama']    = $user['nama'];
 
                 // Jika Opsi "Ingat Saya" Dicentang
@@ -64,8 +70,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setcookie('remember_me', $token, time() + (86400 * 30), "/");
                 }
 
-                // Redirect langsung ke Dashboard
-                header("Location: dashboard.php");
+                // Pengalihan Halaman Berdasarkan Role Pengguna
+                if ($role === 'guru') {
+                    // Akun super admin dikenali dari username, bukan kolom role.
+                    $_SESSION['guru_role'] = strtolower(trim($user['username'] ?? '')) === 'super_admin'
+                        ? 'super-user'
+                        : 'admin';
+
+                    // Mengarahkan Wali Kelas maupun Tim 7 KAIH ke Dashboard Guru
+                    header("Location: guru/dashboard.php");
+                } else {
+                    // Mengarahkan Siswa ke Dashboard Siswa
+                    header("Location: dashboard.php");
+                }
                 exit();
             } else {
                 $error = 'Password yang dimasukkan salah!';
@@ -228,5 +245,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             eyeIcon.classList.toggle('fa-eye-slash', isPassword);
         });
     </script>
-</body>
+</body> 
 </html>

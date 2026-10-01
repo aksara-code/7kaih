@@ -165,13 +165,13 @@ foreach ($classCounts as $className => $count) {
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <?php foreach ($classNames as $className): ?>
                             <?php $classId = $classIdsByName[$className] ?? null; ?>
-                            <a href="<?= $classId ? '../guru/dashboard.php?kelas_id=' . $classId : '#' ?>" <?= $classId ? '' : 'aria-disabled="true"' ?> class="group bg-white border border-slate-200 rounded-xl p-4 shadow-sm <?= $classId ? 'hover:border-emerald-500 hover:shadow-md' : 'opacity-60 cursor-not-allowed' ?> transition">
+                            <a href="../guru/dashboard.php?kelas=<?= urlencode($className) ?>" class="group bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition">
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-lg font-black text-slate-900"><?= htmlspecialchars($className) ?></span>
-                                    <i class="fa-solid <?= $classId ? 'fa-arrow-up-right-from-square text-emerald-700' : 'fa-circle-exclamation text-amber-600' ?> text-xs"></i>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-700 text-xs"></i>
                                 </div>
                                 <span class="block text-xs font-semibold text-slate-500 mt-1">
-                                    <?= $classId ? $classCounts[$className] . ' siswa · Buka rekap' : 'Kelas belum terdaftar di database' ?>
+                                    <?= $classCounts[$className] ?> siswa · Buka kelas
                                 </span>
                             </a>
                         <?php endforeach; ?>

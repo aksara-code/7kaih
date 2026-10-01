@@ -5,9 +5,18 @@ require_once 'koneksi.php';
 // 1. Jika pengguna sudah memiliki Session login, alihkan sesuai role
 if (isset($_SESSION['user_id'])) {
     if (isset($_SESSION['role']) && $_SESSION['role'] === 'guru') {
-        header("Location: guru/dashboard.php");
-    } else {
+        $guru_role = $_SESSION['guru_role'] ?? '';
+        if ($guru_role === 'super-user') {
+            header('Location: admin/dashboard.php');
+        } elseif (in_array($guru_role, ['wali-kelas', 'admin'], true)) {
+            header('Location: guru/dashboard.php');
+        } else {
+            header('Location: logout.php');
+        }
+    } elseif (($_SESSION['role'] ?? '') === 'siswa') {
         header("Location: dashboard.php");
+    } else {
+        header('Location: logout.php');
     }
     exit();
 }
@@ -36,17 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['identifier' => $identifier]);
         $user = $stmt->fetch();
         $role = 'siswa';
-               
+                
         // Jika bukan siswa, cek tabel guru berdasarkan Username atau NIP
-if (!$user) {
-    $stmt = $pdo->prepare("SELECT * FROM guru WHERE username = :id1 OR nip = :id2 LIMIT 1");
-    $stmt->execute([
-        'id1' => $identifier,
-        'id2' => $identifier
-    ]);
-    $user = $stmt->fetch();
-    $role = 'guru';
-}
+        if (!$user) {
+            $stmt = $pdo->prepare("SELECT * FROM guru WHERE username = :id1 OR nip = :id2 LIMIT 1");
+            $stmt->execute([
+                'id1' => $identifier,
+                'id2' => $identifier
+            ]);
+            $user = $stmt->fetch();
+            $role = 'guru';
+        }
 
         if ($user) {
             $password_valid = false;
@@ -72,18 +81,35 @@ if (!$user) {
 
                 // Pengalihan Halaman Berdasarkan Role Pengguna
                 if ($role === 'guru') {
-                    // Akun super admin dikenali dari username, bukan kolom role.
-                    $_SESSION['guru_role'] = strtolower(trim($user['username'] ?? '')) === 'super_admin'
-                        ? 'super-user'
-                        : 'admin';
+                    $guru_id = $user['id'];
 
-                    // Mengarahkan Wali Kelas maupun Tim 7 KAIH ke Dashboard Guru
-                    header("Location: guru/dashboard.php");
+                    // Cek apakah ID guru terdaftar di tabel kelas sebagai wali kelas
+                    $stmt_check = $pdo->prepare("SELECT id FROM kelas WHERE id_guru = :guru_id LIMIT 1");
+                    $stmt_check->execute(['guru_id' => $guru_id]);
+                    $is_wali_kelas = $stmt_check->fetch();
+
+                    if ($is_wali_kelas) {
+                        // Jika ID ditemukan di tabel kelas -> Wali Kelas
+                        $_SESSION['guru_role'] = 'wali-kelas';
+                        $dashboard = 'guru/dashboard.php';
+                    } else {
+                        // Jika ID TIDAK terdaftar di tabel kelas -> Tim 7 KAIH / Super User
+                        $_SESSION['guru_role'] = 'super-user';
+                        $dashboard = 'admin/dashboard.php';
+                    }
+
+                    $_SESSION['username'] = $user['username'] ?? '';
+
+                    header("Location: $dashboard");
+                    exit();
                 } else {
+                    unset($_SESSION['guru_role']);
+                    unset($_SESSION['username']);
+                    
                     // Mengarahkan Siswa ke Dashboard Siswa
                     header("Location: dashboard.php");
+                    exit();
                 }
-                exit();
             } else {
                 $error = 'Password yang dimasukkan salah!';
             }

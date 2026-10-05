@@ -74,7 +74,7 @@
                 <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
             </div>
 
-            <form id="activityForm" class="space-y-2">
+            <form id="activityForm" class="space-y-3">
                 <div>
                     <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
 
@@ -106,15 +106,23 @@
                     </div>
                 </div>
 
+                <!-- Unggah Foto Kegiatan -->
                 <div>
-                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
-                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white" />
-                    <div id="imagePreviewWrapper" class="mt-2 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                        <img id="imagePreview" class="h-32 w-full object-cover" alt="Preview ibadah" />
+                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">
+                        Foto Kegiatan <span class="font-semibold normal-case tracking-normal text-slate-500">(Opsional)</span>
+                    </label>
+                    <div class="flex items-center gap-3 p-2 bg-slate-50 border-2 border-slate-300 rounded-xl">
+                        <label class="cursor-pointer bg-emerald-800 hover:bg-emerald-900 active:bg-emerald-950 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all inline-flex items-center shrink-0 shadow-sm">
+                            Choose File
+                            <input id="imageInput" type="file" name="foto" accept="image/*" capture="environment" class="hidden" />
+                        </label>
+                        <span id="fileNameDisplay" class="text-xs font-semibold text-slate-400 truncate">
+                            No file chosen
+                        </span>
                     </div>
                 </div>
 
-                <div class="mt-2 flex items-center justify-between gap-3">
+                <div class="mt-3 flex items-center justify-between gap-3">
                     <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700">Batal</button>
                     <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
                 </div>
@@ -139,8 +147,7 @@
         const pager = document.getElementById('pager');
         const activityForm = document.getElementById('activityForm');
         const imageInput = document.getElementById('imageInput');
-        const imagePreview = document.getElementById('imagePreview');
-        const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
         const optionButtons = document.querySelectorAll('.option-btn');
         const prayerGroupButtons = document.querySelectorAll('.prayer-group-btn');
         const prayerChoiceWrapper = document.getElementById('prayerChoiceWrapper');
@@ -226,17 +233,15 @@
         function handleImageSelect() {
             const file = imageInput.files && imageInput.files[0];
             if (!file) {
-                imagePreviewWrapper.classList.add('hidden');
-                imagePreview.src = '';
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.classList.add('text-slate-400');
+                fileNameDisplay.classList.remove('text-slate-700');
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                imagePreview.src = event.target.result;
-                imagePreviewWrapper.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+            fileNameDisplay.textContent = file.name;
+            fileNameDisplay.classList.remove('text-slate-400');
+            fileNameDisplay.classList.add('text-slate-700');
         }
 
         prayerGroupButtons.forEach(groupButton => {
@@ -387,9 +392,10 @@
                 currentPage = 1;
                 await loadHistory();
                 activityForm.reset();
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.classList.add('text-slate-400');
+                fileNameDisplay.classList.remove('text-slate-700');
                 optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
-                imagePreviewWrapper.classList.add('hidden');
-                imagePreview.src = '';
                 closeModal();
                 successNotification.classList.remove('hidden');
                 clearTimeout(successNotificationTimer);

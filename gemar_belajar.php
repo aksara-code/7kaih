@@ -16,20 +16,22 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased">
+<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased selection:bg-emerald-200">
+
+    <!-- Header Section -->
     <div class="relative overflow-hidden rounded-b-[32px] bg-[#0c6d4d] pb-16 pt-6 shadow-[0_18px_30px_rgba(12,109,77,0.22)]">
         <div class="absolute -right-12 -top-8 h-36 w-36 rounded-full bg-[#0d7f5a]/30 blur-2xl"></div>
         <div class="absolute -left-10 bottom-2 h-32 w-32 rounded-full bg-[#0a5e41]/30 blur-2xl"></div>
 
         <div class="relative z-10 mx-auto max-w-md px-4">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
+                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
 
-                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50">
-                    <span class="text-lg leading-none">＋</span>
+                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50 active:scale-95">
+                    <span class="text-base leading-none">＋</span>
                     <span>Baru</span>
                 </button>
             </div>
@@ -38,7 +40,7 @@
                 <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-lg shadow-emerald-900/10">
                     <img
                         src="https://cerdasberkarakter.kemendikdasmen.go.id/wp-content/uploads/2024/12/5-gemar-belajar.png"
-                        alt="logo gemar belajar"
+                        alt="Logo Gemar Belajar"
                         class="h-full w-full object-cover"
                     />
                 </div>
@@ -51,62 +53,82 @@
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
-        <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
-            Catatan kegiatan belajar berhasil disimpan!
+        <!-- Notifikasi Sukses -->
+        <div id="successNotification" class="mb-3 hidden rounded-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm transition-all" role="status" aria-live="polite">
+            <i class="fa-solid fa-circle-check mr-1.5 text-emerald-700"></i>
+            <span>Catatan kegiatan belajar berhasil disimpan!</span>
         </div>
 
         <div class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
-            <div class="mb-4">
-                <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
-                <h2 class="mt-1 text-xl font-extrabold text-slate-800">Kegiatan Belajar</h2>
+            <div class="mb-4 flex items-center justify-between">
+                <div>
+                    <p class="text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-slate-500">Riwayat</p>
+                    <h2 class="mt-0.5 text-xl font-extrabold text-slate-800">Kegiatan Belajar</h2>
+                </div>
             </div>
 
+            <!-- List Riwayat -->
             <div id="historyList" class="space-y-3"></div>
+
+            <!-- Pager / Navigasi Halaman -->
             <div id="pager" class="mt-4 flex items-center justify-between gap-3"></div>
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
-        <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-4 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
-            <div class="mb-4 flex items-center justify-between gap-3">
-                <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan</h2>
-                <button type="button" id="closeAddModalBtn" class="text-2xl font-light text-slate-500">×</button>
+    <!-- Modal Tambah Kegiatan -->
+    <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
+        <div class="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-5 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
+            <div class="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <h2 class="text-xl font-extrabold text-slate-800">Tambah Kegiatan Belajar</h2>
+                <button type="button" id="closeAddModalBtn" class="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
 
             <form id="activityForm" class="space-y-4">
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Tanggal</label>
-                    <input id="entryDate" type="date" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
+                    <label for="entryDate" class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Tanggal <span class="text-rose-500">*</span></label>
+                    <input id="entryDate" type="date" required class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Buku yang Dipelajari</label>
-                    <input id="manualActivity" type="text" placeholder="Contoh: Buku Matematika, Bahasa Indonesia" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
+                    <label for="manualActivity" class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Buku / Materi yang Dipelajari <span class="text-rose-500">*</span></label>
+                    <input id="manualActivity" type="text" required placeholder="Contoh: Buku Matematika, Bahasa Indonesia" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100" />
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Informasi yang Didapat</label>
-                    <textarea id="activityNote" rows="3" placeholder="Tuliskan informasi atau materi yang didapat hari ini..." class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100"></textarea>
+                    <label for="activityNote" class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Informasi / Poin Penting yang Didapat</label>
+                    <textarea id="activityNote" rows="3" placeholder="Tuliskan ringkasan materi atau hal menarik yang dipelajari hari ini..." class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-700 focus:border-[#0d6b4e] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-100"></textarea>
                 </div>
 
+                <!-- Unggah Foto Kegiatan (Tanpa Preview Foto di Bawahnya) -->
                 <div>
-                    <label class="mb-2 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Foto Kegiatan (Opsional)</label>
-                    <input id="imageInput" type="file" accept="image/*" capture="environment" class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#0d6b4e] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
-                    <div id="imagePreviewWrapper" class="mt-3 hidden overflow-hidden rounded-[12px] border border-slate-200 bg-slate-50">
-                        <img id="imagePreview" class="h-40 w-full object-cover" alt="Preview belajar" />
+                    <label class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">
+                        FOTO KEGIATAN <span class="font-normal normal-case text-slate-400">(Opsional)</span>
+                    </label>
+                    <div class="flex items-center gap-3.5 rounded-[16px] border border-slate-200 bg-[#f8fafc] p-2">
+                        <label for="imageInput" class="inline-flex cursor-pointer shrink-0 items-center rounded-full bg-[#084c38] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#063b2c] active:scale-95">
+                            Choose File
+                        </label>
+                        <input id="imageInput" type="file" name="foto" accept="image/*" class="sr-only" />
+                        <span id="fileNameDisplay" class="truncate text-xs font-semibold text-slate-600">
+                            No file chosen
+                        </span>
                     </div>
                 </div>
 
-                <div class="mt-5 flex items-center justify-between gap-3">
-                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">Batal</button>
-                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-800/20">Simpan</button>
+                <div class="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
+                    <button type="button" id="cancelAddModalBtn" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 active:scale-95">Batal</button>
+                    <button type="submit" class="flex-1 rounded-[12px] bg-[#0d6b4e] px-4 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-800/20 transition hover:bg-[#0a5a41] active:scale-95">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <footer class="py-10 text-center text-sm text-slate-500">
+    <!-- Footer -->
+    <footer class="py-10 text-center text-xs text-slate-500">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
@@ -114,6 +136,7 @@
     <script>
         const CATEGORY = 'belajar';
         const ITEMS_PER_PAGE = 5;
+
         const addModal = document.getElementById('addModal');
         const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
@@ -124,12 +147,14 @@
         const activityForm = document.getElementById('activityForm');
         const entryDate = document.getElementById('entryDate');
         const manualActivity = document.getElementById('manualActivity');
+        const activityNote = document.getElementById('activityNote');
         const imageInput = document.getElementById('imageInput');
-        const imagePreview = document.getElementById('imagePreview');
-        const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+
         let currentPage = 1;
         let activityItems = [];
         let successNotificationTimer = null;
+        let selectedImageDataUrl = '';
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, function (char) {
@@ -138,8 +163,24 @@
             });
         }
 
+        function formatNoteText(text) {
+            if (!text) return 'Catatan belajar hari ini.';
+            const safeText = escapeHtml(text);
+            return safeText.replace(/\n/g, '<br>');
+        }
+
         function setAutoDate() {
-            entryDate.value = ActivityDB.today();
+            entryDate.value = typeof ActivityDB !== 'undefined' && ActivityDB.today ? ActivityDB.today() : new Date().toISOString().split('T')[0];
+        }
+
+        function resetFormState() {
+            activityForm.reset();
+            selectedImageDataUrl = '';
+            if (fileNameDisplay) {
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.classList.add('text-slate-400');
+                fileNameDisplay.classList.remove('text-slate-700');
+            }
         }
 
         function openModal() {
@@ -151,25 +192,34 @@
         function closeModal() {
             addModal.classList.add('hidden');
             addModal.classList.remove('flex');
+            resetFormState();
         }
 
         function formatDate(value) {
+            if (!value) return '-';
             const date = new Date(value + 'T00:00:00');
-            return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+            return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
         }
 
         function handleImageSelect() {
             const file = imageInput.files && imageInput.files[0];
             if (!file) {
-                imagePreviewWrapper.classList.add('hidden');
-                imagePreview.src = '';
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.classList.add('text-slate-400');
+                fileNameDisplay.classList.remove('text-slate-700');
+                selectedImageDataUrl = '';
                 return;
             }
 
+            // Tampilkan nama file yang dipilih
+            fileNameDisplay.textContent = file.name;
+            fileNameDisplay.classList.remove('text-slate-400');
+            fileNameDisplay.classList.add('text-slate-700');
+
+            // Tetap konversi gambar ke Base64 agar dapat disimpan ke database
             const reader = new FileReader();
             reader.onload = function (event) {
-                imagePreview.src = event.target.result;
-                imagePreviewWrapper.classList.remove('hidden');
+                selectedImageDataUrl = event.target.result;
             };
             reader.readAsDataURL(file);
         }
@@ -177,7 +227,7 @@
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
-            if (totalItems < ITEMS_PER_PAGE) {
+            if (totalItems <= ITEMS_PER_PAGE) {
                 pager.innerHTML = '';
                 return;
             }
@@ -186,9 +236,15 @@
             if (currentPage > totalPages) currentPage = totalPages;
 
             pager.innerHTML = `
-                <button type="button" id="prevPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage === 1 ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage === 1 ? 'disabled' : ''}><span aria-hidden="true">‹</span> Prev</button>
-                <div class="inline-flex min-w-[110px] items-center justify-center rounded-full bg-[#dfeee6] px-4 py-2 text-[11px] font-extrabold tracking-[0.14em] text-slate-700">Hal ${currentPage} / ${totalPages}</div>
-                <button type="button" id="nextPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage >= totalPages ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-800'}" ${currentPage >= totalPages ? 'disabled' : ''}>Next <span aria-hidden="true">›</span></button>
+                <button type="button" id="prevPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage === 1 ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'}" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                </button>
+                <div class="inline-flex min-w-[100px] items-center justify-center rounded-full bg-[#dfeee6] px-3.5 py-1.5 text-[10px] font-extrabold tracking-[0.12em] text-slate-700">
+                    Hal ${currentPage} / ${totalPages}
+                </div>
+                <button type="button" id="nextPageBtn" class="inline-flex items-center justify-center text-xs font-bold text-slate-600 transition ${currentPage >= totalPages ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                    Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
             `;
 
             document.getElementById('prevPageBtn')?.addEventListener('click', () => {
@@ -209,15 +265,15 @@
         function renderHistory() {
             const items = activityItems;
 
-            if (!items.length) {
+            if (!items || !items.length) {
                 historyList.innerHTML = `
-                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4 text-center shadow-sm">
-                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-                            <i class="fa-solid fa-book-open text-2xl text-emerald-600" aria-label="Ikon belajar"></i>
+                    <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-5 text-center shadow-sm">
+                        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+                            <i class="fa-solid fa-book-open text-2xl text-emerald-600"></i>
                         </div>
-                        <p class="text-base font-extrabold text-slate-800">Kamu belum mengisi data</p>
-                        <p class="mt-2 text-xs leading-relaxed text-slate-600">
-                            Belum ada data belajar. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> di atas untuk menambahkan kegiatan.
+                        <p class="text-sm font-extrabold text-slate-800">Belum ada data belajar</p>
+                        <p class="mt-1.5 text-xs leading-relaxed text-slate-600">
+                            Kamu belum mencatat kegiatan belajar. Klik tombol <span class="font-bold text-emerald-700">“Baru”</span> untuk menambah catatan pertama.
                         </p>
                     </div>
                 `;
@@ -232,24 +288,28 @@
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
             historyList.innerHTML = pageItems.map(item => `
-                <div class="rounded-[22px] border border-[#ebf3ee] bg-[#f9fbfa] p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                <div class="group relative rounded-[22px] border border-[#ebf3ee] bg-[#f9fbfa] p-3.5 transition hover:border-emerald-200 hover:shadow-md">
                     <div class="flex items-start gap-3">
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
-                                <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                <span class="text-slate-400">•</span>
-                                <span class="font-extrabold text-slate-700">${item.time}</span>
+                        <div class="min-w-0 flex-1 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d] text-[10px]">📅</span>
+                                    <span>${formatDate(item.date)}</span>
+                                    ${item.time ? `<span class="text-slate-300">•</span><span class="text-slate-600">${item.time}</span>` : ''}
+                                </div>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Belajar')}</p>
-                            <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? escapeHtml(item.note) : 'Catatan belajar hari ini.'}
+                            <p class="text-sm font-extrabold text-slate-800 leading-snug">${escapeHtml(item.option || 'Belajar')}</p>
+                            <p class="text-xs leading-relaxed text-slate-600">
+                                ${formatNoteText(item.note)}
                             </p>
                         </div>
 
-                        <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
-                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan belajar" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">📚</div>'}
+                        <div class="w-24 shrink-0 overflow-hidden rounded-[12px] border border-slate-200/80 bg-white">
+                            ${item.image 
+                                ? `<img src="${item.image}" class="h-24 w-full object-cover transition duration-300 group-hover:scale-105" alt="Foto kegiatan belajar" />` 
+                                : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">📚</div>'
+                            }
                         </div>
                     </div>
                 </div>
@@ -257,38 +317,38 @@
 
             renderPager(items.length);
         }
-
+        
         activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selected = manualActivity.value.trim() || 'Belajar';
-            const file = imageInput.files && imageInput.files[0];
+
             try {
                 await ActivityDB.save(CATEGORY, {
                     date: entryDate.value,
                     option: selected,
-                    note: document.getElementById('activityNote').value.trim(),
-                    image: file || null
+                    note: activityNote.value.trim(),
+                    image: selectedImageDataUrl || (imageInput.files && imageInput.files[0]) || null
                 });
+
                 currentPage = 1;
                 await loadHistory();
-                activityForm.reset();
-                imagePreviewWrapper.classList.add('hidden');
-                imagePreview.src = '';
                 closeModal();
+
                 successNotification.classList.remove('hidden');
                 clearTimeout(successNotificationTimer);
                 successNotificationTimer = setTimeout(() => {
                     successNotification.classList.add('hidden');
-                }, 5000);
+                }, 4000);
             } catch (error) {
-                alert(error.message);
+                alert('Gagal menyimpan data: ' + error.message);
             }
         });
 
         openAddModalBtn.addEventListener('click', openModal);
         closeAddModalBtn.addEventListener('click', closeModal);
         if (cancelAddModalBtn) cancelAddModalBtn.addEventListener('click', closeModal);
+        
         addModal.addEventListener('click', function (event) {
             if (event.target === addModal) {
                 closeModal();
@@ -297,15 +357,19 @@
 
         async function loadHistory() {
             try {
-                activityItems = await ActivityDB.list(CATEGORY);
+                if (typeof ActivityDB !== 'undefined' && ActivityDB.list) {
+                    activityItems = await ActivityDB.list(CATEGORY);
+                } else {
+                    activityItems = [];
+                }
                 renderHistory();
             } catch (error) {
-                historyList.textContent = error.message;
+                historyList.innerHTML = `<p class="text-xs text-rose-600 p-3 bg-rose-50 rounded-lg">Gagal memuat data: ${escapeHtml(error.message)}</p>`;
                 pager.innerHTML = '';
             }
         }
 
-        loadHistory();
+        document.addEventListener('DOMContentLoaded', loadHistory);
     </script>
 </body>
 </html>

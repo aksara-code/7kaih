@@ -46,73 +46,115 @@ if ($siswa_id) {
     $siswa = $stmt->fetch();
 }
 
-// 5. Ambil/Persiapkan Data Kebiasaan Siswa
-// (Catatan: Disesuaikan dengan query/tabel log kebiasaan di database Anda)
-$daftar_kebiasaan = [
+// 5. Rekap pengisian kebiasaan siswa pada bulan berjalan
+$kategori_kebiasaan = [
     [
+        'kode' => 'bangun',
         'nama' => 'Bangun Pagi Tepat Waktu',
         'ikon' => 'fa-sun',
         'kategori' => 'Kedisiplinan',
-        'status' => 'Sangat Baik',
-        'total' => '28/30 Hari',
-        'persen' => 93,
-        'warna' => 'amber'
     ],
     [
+        'kode' => 'ibadah',
         'nama' => 'Beribadah Tepat Waktu',
         'ikon' => 'fa-hands-praying',
         'kategori' => 'Spiritual',
-        'status' => 'Sangat Baik',
-        'total' => '30/30 Hari',
-        'persen' => 100,
-        'warna' => 'emerald'
     ],
     [
-        'nama' => 'Berolahraga / Pola Hidup Sehat',
-        'ikon' => 'fa-child-reaching',
-        'kategori' => 'Kesehatan',
-        'status' => 'Baik',
-        'total' => '24/30 Hari',
-        'persen' => 80,
-        'warna' => 'blue'
-    ],
-    [
-        'nama' => 'Gemar Membaca Buku',
-        'ikon' => 'fa-book-open',
+        'kode' => 'belajar',
+        'nama' => 'Gemar Belajar',
+        'ikon' => 'fa-book-open-reader',
         'kategori' => 'Literasi',
-        'status' => 'Cukup',
-        'total' => '20/30 Hari',
-        'persen' => 66,
-        'warna' => 'purple'
     ],
     [
-        'nama' => 'Makan Makanan Bergizi',
-        'ikon' => 'fa-utensils',
+        'kode' => 'makan',
+        'nama' => 'Makan Sehat dan Bergizi',
+        'ikon' => 'fa-apple-whole',
         'kategori' => 'Kesehatan',
-        'status' => 'Sangat Baik',
-        'total' => '29/30 Hari',
-        'persen' => 96,
-        'warna' => 'rose'
     ],
     [
-        'nama' => 'Bermasyarakat / Membantu Orang Tua',
-        'ikon' => 'fa-hand-holding-heart',
+        'kode' => 'olahraga',
+        'nama' => 'Berolahraga',
+        'ikon' => 'fa-person-running',
+        'kategori' => 'Kesehatan',
+    ],
+    [
+        'kode' => 'bermasyarakat',
+        'nama' => 'Bermasyarakat',
+        'ikon' => 'fa-people-group',
         'kategori' => 'Sosial',
-        'status' => 'Baik',
-        'total' => '25/30 Hari',
-        'persen' => 83,
-        'warna' => 'teal'
     ],
     [
-        'nama' => 'Istirahat & Tidur Cepat',
+        'kode' => 'tidur',
+        'nama' => 'Tidur Cepat',
         'ikon' => 'fa-moon',
         'kategori' => 'Kedisiplinan',
-        'status' => 'Baik',
-        'total' => '26/30 Hari',
-        'persen' => 86,
-        'warna' => 'indigo'
     ],
 ];
+
+$daftar_kebiasaan = [];
+$hari_berjalan = (int) date('j');
+$daftar_nama_bulan = [
+    1 => 'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+];
+$tanggal_laporan = $hari_berjalan . ' ' . $daftar_nama_bulan[(int) date('n')] . ' ' . date('Y');
+$awal_bulan = date('Y-m-01 00:00:00');
+$waktu_sekarang = date('Y-m-d H:i:s');
+
+if ($siswa) {
+    $placeholders_kategori = implode(', ', array_fill(0, count($kategori_kebiasaan), '?'));
+    $stmt_rekap = $pdo->prepare(
+        "SELECT kategori, COUNT(DISTINCT DATE(waktu_mulai)) AS total
+         FROM log_aktivitas
+         WHERE id_siswa = ?
+           AND kategori IN ($placeholders_kategori)
+           AND waktu_mulai >= ?
+           AND waktu_mulai <= ?
+         GROUP BY kategori"
+    );
+    $stmt_rekap->execute(array_merge(
+        [(int) $siswa_id],
+        array_column($kategori_kebiasaan, 'kode'),
+        [$awal_bulan, $waktu_sekarang]
+    ));
+
+    $total_per_kategori = array_fill_keys(array_column($kategori_kebiasaan, 'kode'), 0);
+    foreach ($stmt_rekap->fetchAll() as $rekap) {
+        $total_per_kategori[$rekap['kategori']] = (int) $rekap['total'];
+    }
+
+    foreach ($kategori_kebiasaan as $kebiasaan) {
+        $total = $total_per_kategori[$kebiasaan['kode']];
+        $persen = min(100, (int) round(($total / $hari_berjalan) * 100));
+
+        if ($total === 0) {
+            $status = 'Belum Ada Data';
+        } elseif ($persen >= 80) {
+            $status = 'Sangat Baik';
+        } elseif ($persen >= 60) {
+            $status = 'Baik';
+        } else {
+            $status = 'Perlu Ditingkatkan';
+        }
+
+        $daftar_kebiasaan[] = array_merge($kebiasaan, [
+            'total' => $total,
+            'persen' => $persen,
+            'status' => $status,
+        ]);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -202,7 +244,7 @@ $daftar_kebiasaan = [
                         <div>
                             <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Rekapitulasi Kebiasaan</h2>
                             <p class="text-xs sm:text-sm font-semibold text-emerald-700">Tujuh Kebiasaan Anak Indonesia Hebat</p>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Tanggal Cetak: <?= date('d F Y') ?></p>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">Tanggal Cetak: <?= htmlspecialchars($tanggal_laporan) ?>, <?= date('H:i') ?> WIB</p>
                         </div>
                     </div>
                 </div>
@@ -241,19 +283,14 @@ $daftar_kebiasaan = [
 
                 <!-- Section Ringkasan 7 Kebiasaan Siswa (Desain Bersih & Tidak Menumpuk) -->
                 <div class="space-y-4">
-                    <div class="flex justify-end no-print">
-                        <button onclick="window.print()" class="bg-emerald-800 text-white hover:bg-emerald-700 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all active:scale-95">
-                            <i class="fa-solid fa-print"></i>
-                            <span>Cetak Laporan</span>
-                        </button>
-                    </div>
-                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
                         <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-star text-amber-500"></i> Rekapitulasi 7 Kebiasaan Anak
                         </h3>
-                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                            Bulan Ini
-                        </span>
+                        <button onclick="window.print()" class="no-print bg-emerald-700 text-white hover:bg-emerald-800 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all active:scale-95 shrink-0">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Cetak Laporan</span>
+                        </button>
                     </div>
 
                     <!-- Grid Card Kebiasaan -->
@@ -283,7 +320,7 @@ $daftar_kebiasaan = [
                                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
                                     <div class="flex justify-between text-xs font-bold">
                                         <span class="text-slate-500">Capaian Rutinitas:</span>
-                                        <span class="text-slate-800"><?= $kb['total'] ?> (<?= $kb['persen'] ?>%)</span>
+                                        <span class="text-slate-800"><?= $kb['total'] ?>/<?= $hari_berjalan ?> hari (<?= $kb['persen'] ?>%)</span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                                         <div class="h-full bg-emerald-600 rounded-full" style="width: <?= $kb['persen'] ?>%;"></div>

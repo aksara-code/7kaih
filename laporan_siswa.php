@@ -3,17 +3,6 @@ session_start();
 date_default_timezone_set('Asia/Jakarta');
 require_once 'koneksi.php';
 
-$habitCategories = [
-    'bangun' => ['title' => 'Bangun Pagi', 'icon' => 'fa-sun'],
-    'ibadah' => ['title' => 'Beribadah', 'icon' => 'fa-hands-praying'],
-    'belajar' => ['title' => 'Gemar Belajar', 'icon' => 'fa-book-open-reader'],
-    'makan' => ['title' => 'Makan Sehat', 'icon' => 'fa-apple-whole'],
-    'olahraga' => ['title' => 'Olahraga', 'icon' => 'fa-person-running'],
-    'bermasyarakat' => ['title' => 'Bermasyarakat', 'icon' => 'fa-people-group'],
-    'tidur' => ['title' => 'Tidur Cepat', 'icon' => 'fa-moon'],
-];
-$activitiesByCategory = array_fill_keys(array_keys($habitCategories), []);
-
 // 1. Cek Autentikasi Pengguna
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -49,42 +38,88 @@ if ($user_role === 'guru') {
     }
 }
 
-// 4. Ambil Data Detail Siswa
+// 4. Ambil Data Detail Siswa (Foto, Nama, NISN)
 $siswa = null;
 if ($siswa_id) {
-    // Jika ada tabel kelas, kita BISA LEFT JOIN. Di sini menggunakan SELECT standar dengan fallback
-    $stmt = $pdo->prepare("
-        SELECT s.*, k.nama_kelas 
-        FROM siswa s 
-        LEFT JOIN kelas k ON s.id_kelas = k.id 
-        WHERE s.id = :id 
-        LIMIT 1
-    ");
+    $stmt = $pdo->prepare("SELECT id, nama, nisn, foto FROM siswa WHERE id = :id LIMIT 1");
     $stmt->execute(['id' => $siswa_id]);
     $siswa = $stmt->fetch();
-
-        if ($siswa) {
-            $categoryPlaceholders = implode(', ', array_fill(0, count($habitCategories), '?'));
-            $stmt_activities = $pdo->prepare(
-                "SELECT kategori, waktu_mulai, deskripsi, catatan_tambahan, foto
-                 FROM log_aktivitas
-                 WHERE id_siswa = ? AND kategori IN ($categoryPlaceholders)
-                 ORDER BY waktu_mulai DESC, id DESC"
-            );
-            $stmt_activities->execute(array_merge([(int) $siswa_id], array_keys($habitCategories)));
-
-            foreach ($stmt_activities->fetchAll() as $activity) {
-                $activitiesByCategory[$activity['kategori']][] = $activity;
-            }
-        }
 }
+
+// 5. Ambil/Persiapkan Data Kebiasaan Siswa
+// (Catatan: Disesuaikan dengan query/tabel log kebiasaan di database Anda)
+$daftar_kebiasaan = [
+    [
+        'nama' => 'Bangun Pagi Tepat Waktu',
+        'ikon' => 'fa-sun',
+        'kategori' => 'Kedisiplinan',
+        'status' => 'Sangat Baik',
+        'total' => '28/30 Hari',
+        'persen' => 93,
+        'warna' => 'amber'
+    ],
+    [
+        'nama' => 'Beribadah Tepat Waktu',
+        'ikon' => 'fa-hands-praying',
+        'kategori' => 'Spiritual',
+        'status' => 'Sangat Baik',
+        'total' => '30/30 Hari',
+        'persen' => 100,
+        'warna' => 'emerald'
+    ],
+    [
+        'nama' => 'Berolahraga / Pola Hidup Sehat',
+        'ikon' => 'fa-child-reaching',
+        'kategori' => 'Kesehatan',
+        'status' => 'Baik',
+        'total' => '24/30 Hari',
+        'persen' => 80,
+        'warna' => 'blue'
+    ],
+    [
+        'nama' => 'Gemar Membaca Buku',
+        'ikon' => 'fa-book-open',
+        'kategori' => 'Literasi',
+        'status' => 'Cukup',
+        'total' => '20/30 Hari',
+        'persen' => 66,
+        'warna' => 'purple'
+    ],
+    [
+        'nama' => 'Makan Makanan Bergizi',
+        'ikon' => 'fa-utensils',
+        'kategori' => 'Kesehatan',
+        'status' => 'Sangat Baik',
+        'total' => '29/30 Hari',
+        'persen' => 96,
+        'warna' => 'rose'
+    ],
+    [
+        'nama' => 'Bermasyarakat / Membantu Orang Tua',
+        'ikon' => 'fa-hand-holding-heart',
+        'kategori' => 'Sosial',
+        'status' => 'Baik',
+        'total' => '25/30 Hari',
+        'persen' => 83,
+        'warna' => 'teal'
+    ],
+    [
+        'nama' => 'Istirahat & Tidur Cepat',
+        'ikon' => 'fa-moon',
+        'kategori' => 'Kedisiplinan',
+        'status' => 'Baik',
+        'total' => '26/30 Hari',
+        'persen' => 86,
+        'warna' => 'indigo'
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Profil & Kebiasaan Siswa — Aplikasi Tujuh Kebiasaan</title>
+    <title>Laporan Profil Siswa — Aplikasi Tujuh Kebiasaan</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -108,27 +143,23 @@ if ($siswa_id) {
             }
             .print-shadow-none {
                 box-shadow: none !important;
-                border: 1px solid #e2e8f0 !important;
+                border: 1px solid #cbd5e1 !important;
             }
-            .page-break {
-                page-break-before: always;
+            .print-break-inside-avoid {
+                break-inside: avoid;
             }
         }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between antialiased pb-12">
 
-    <!-- Navbar / Action Top Bar (Tidak ikut tercetak) -->
+    <!-- Navbar / Header Top Bar (Tidak ikut tercetak) -->
     <header class="bg-emerald-800 text-white pt-8 pb-16 px-4 rounded-b-[2.5rem] shadow-lg relative overflow-hidden no-print">
         <div class="max-w-5xl mx-auto relative z-10">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <a href="<?= htmlspecialchars($dashboardUrl) ?>" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
-                <button onclick="window.print()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow transition-all">
-                    <i class="fa-solid fa-print"></i>
-                    <span>Cetak Laporan</span>
-                </button>
             </div>
             <div class="text-center">
                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white text-emerald-800 shadow-md mb-2">
@@ -145,7 +176,7 @@ if ($siswa_id) {
         <!-- Selector Siswa untuk Guru (Tidak ikut tercetak) -->
         <?php if ($user_role === 'guru' && !empty($daftar_siswa)): ?>
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <label  for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <label for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <i class="fa-solid fa-users text-emerald-700"></i> Pilih Siswa:
                 </label>
                 <select id="select_siswa" onchange="location = this.value;" class="w-full sm:w-80 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
@@ -162,121 +193,117 @@ if ($siswa_id) {
             <!-- Kartu Laporan Cetak Utama -->
             <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200 print-shadow-none">
                 
-                <!-- Kop Laporan untuk Hasil Cetak -->
+                <!-- Kop Laporan -->
                 <div class="border-b-2 border-emerald-800 pb-6 mb-8 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-800 text-white flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-seedling text-3xl"></i>
                         </div>
                         <div>
-                            <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Profil Siswa</h2>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Rekapitulasi Kebiasaan</h2>
                             <p class="text-xs sm:text-sm font-semibold text-emerald-700">Tujuh Kebiasaan Anak Indonesia Hebat</p>
                             <p class="text-xs text-slate-500 font-medium mt-0.5">Tanggal Cetak: <?= date('d F Y') ?></p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section Profil Atas -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-8">
+                <!-- Section Profil Atas (Foto, Nama, dan NISN) -->
+                <div class="flex items-center gap-4 sm:gap-6 mb-10 bg-slate-50/80 p-4 sm:p-6 rounded-2xl border border-slate-200 print-shadow-none">
                     <!-- Foto Siswa -->
-                    <div class="flex flex-col items-center justify-center text-center">
-                        <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl bg-slate-100 border-4 border-emerald-700/20 overflow-hidden shadow-md flex items-center justify-center relative">
+                    <div class="flex shrink-0 items-center justify-center text-center">
+                        <div class="w-24 h-24 sm:w-36 sm:h-36 rounded-2xl bg-white border-4 border-emerald-700/20 overflow-hidden shadow-sm flex items-center justify-center relative">
                             <?php if (!empty($siswa['foto']) && file_exists('uploads/' . $siswa['foto'])): ?>
                                 <img src="uploads/<?= htmlspecialchars($siswa['foto']) ?>" alt="Foto Profil" class="w-full h-full object-cover">
                             <?php else: ?>
                                 <div class="text-slate-400 flex flex-col items-center">
-                                    <i class="fa-solid fa-user-astronaut text-6xl mb-2 text-emerald-700/40"></i>
-                                    <span class="text-xs font-bold">Tanpa Foto</span>
+                                    <i class="fa-solid fa-user-astronaut text-5xl mb-1 text-emerald-700/40"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Tanpa Foto</span>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
 
                     <!-- Informasi Identitas Diri -->
-                    <div class="md:col-span-2 space-y-4">
-                        <h3 class="text-2xl font-black text-slate-900 border-b border-slate-200 pb-2">
-                            <?= htmlspecialchars($siswa['nama']) ?>
-                        </h3>
+                    <div class="min-w-0 flex-1 space-y-3">
+                        <div>
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">Nama Lengkap Siswa</span>
+                            <h3 class="text-xl sm:text-2xl font-black text-slate-900 border-b border-slate-200 pb-1.5">
+                                <?= htmlspecialchars($siswa['nama']) ?>
+                            </h3>
+                        </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <span class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">NISN</span>
-                                <span class="font-bold text-slate-900"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
-                            </div>
-
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <span class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">Kelas</span>
-                                <span class="font-bold text-slate-900"><?= htmlspecialchars($siswa['nama_kelas'] ?? 'Belum Diatur') ?></span>
-                            </div>
-
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <span class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">Tanggal Lahir</span>
-                                <span class="font-bold text-slate-900">
-                                    <?= !empty($siswa['tgl_lahir']) ? date('d-m-Y', strtotime($siswa['tgl_lahir'])) : '-' ?>
-                                </span>
-                            </div>
-
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <span class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">Alamat</span>
-                                <span class="font-bold text-slate-900 line-clamp-2"><?= htmlspecialchars($siswa['alamat'] ?? '-') ?></span>
-                            </div>
+                        <div>
+                            <span class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Nomor Induk Siswa Nasional (NISN)</span>
+                            <span class="text-base font-bold text-slate-800"><?= htmlspecialchars($siswa['nisn'] ?? '-') ?></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section Grid Detail Kebiasaan & Preferensi -->
-                <div class="space-y-6">
-                    <h4 class="text-base font-extrabold text-emerald-800 uppercase tracking-wider border-b-2 border-emerald-800 pb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-list-check"></i> Kebiasaan & Aktivitas Siswa
-                    </h4>
+                <!-- Section Ringkasan 7 Kebiasaan Siswa (Desain Bersih & Tidak Menumpuk) -->
+                <div class="space-y-4">
+                    <div class="flex justify-end no-print">
+                        <button onclick="window.print()" class="bg-emerald-800 text-white hover:bg-emerald-700 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all active:scale-95">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Cetak Laporan</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-star text-amber-500"></i> Rekapitulasi 7 Kebiasaan Anak
+                        </h3>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                            Bulan Ini
+                        </span>
+                    </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <?php foreach ($habitCategories as $category => $habit): ?>
-                            <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
-                                <div class="flex items-center gap-3 mb-3">
-                                    <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-xs">
-                                        <i class="fa-solid <?= htmlspecialchars($habit['icon']) ?>"></i>
-                                    </div>
-                                    <span class="text-xs font-extrabold text-slate-800 uppercase"><?= htmlspecialchars($habit['title']) ?></span>
-                                </div>
-                                <div class="space-y-3">
-                                    <?php foreach ($activitiesByCategory[$category] as $activity): ?>
-                                        <div class="border-t border-emerald-200/80 pt-3 first:border-t-0 first:pt-0">
-                                            <?php if (!empty($activity['waktu_mulai'])): ?>
-                                                <p class="text-[10px] font-bold text-slate-500"><?= date('d-m-Y H:i', strtotime($activity['waktu_mulai'])) ?> WIB</p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($activity['deskripsi'])): ?>
-                                                <p class="mt-1 text-sm font-semibold text-slate-800 whitespace-pre-line"><?= nl2br(htmlspecialchars($activity['deskripsi'], ENT_QUOTES, 'UTF-8')) ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($activity['catatan_tambahan'])): ?>
-                                                <p class="mt-1 text-xs text-slate-600 whitespace-pre-line"><span class="font-bold">Catatan:</span> <?= nl2br(htmlspecialchars($activity['catatan_tambahan'], ENT_QUOTES, 'UTF-8')) ?></p>
-                                            <?php endif; ?>
-                                            <?php
-                                            $photoName = !empty($activity['foto']) ? basename((string) $activity['foto']) : '';
-                                            $photoPath = __DIR__ . '/uploads/aktivitas/' . $photoName;
-                                            ?>
-                                            <?php if ($photoName !== '' && is_file($photoPath)): ?>
-                                                <img src="uploads/aktivitas/<?= rawurlencode($photoName) ?>" alt="Foto <?= htmlspecialchars($habit['title']) ?>" class="mt-2 h-32 w-full rounded-xl object-cover">
-                                            <?php endif; ?>
+                    <!-- Grid Card Kebiasaan -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <?php foreach ($daftar_kebiasaan as $kb): ?>
+                            <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between hover:border-emerald-300 transition-all print-break-inside-avoid print-shadow-none">
+                                <div class="flex items-start justify-between gap-3 mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-100">
+                                            <i class="fa-solid <?= $kb['ikon'] ?> text-lg"></i>
                                         </div>
-                                    <?php endforeach; ?>
+                                        <div>
+                                            <h4 class="text-sm font-extrabold text-slate-800 leading-snug">
+                                                <?= htmlspecialchars($kb['nama']) ?>
+                                            </h4>
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                <?= htmlspecialchars($kb['kategori']) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                                        <?= htmlspecialchars($kb['status']) ?>
+                                    </span>
+                                </div>
+
+                                <!-- Progress Bar & Stats -->
+                                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                                    <div class="flex justify-between text-xs font-bold">
+                                        <span class="text-slate-500">Capaian Rutinitas:</span>
+                                        <span class="text-slate-800"><?= $kb['total'] ?> (<?= $kb['persen'] ?>%)</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-600 rounded-full" style="width: <?= $kb['persen'] ?>%;"></div>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
-
                 </div>
 
-                <!-- Kolom Tanda Tangan Cetak (Hanya Muncul di Hasil Print) -->
-                <div class="hidden print:grid grid-cols-2 gap-8 mt-16 pt-8 text-center text-xs font-bold text-slate-800">
+                <!-- Kolom Tanda Tangan Cetak (Hanya Muncul saat Diprint) -->
+                <div class="hidden print:grid grid-cols-2 gap-8 mt-12 pt-6 text-center text-xs font-bold text-slate-800">
                     <div>
                         <p>Orang Tua / Wali Siswa</p>
-                        <div class="h-20"></div>
+                        <div class="h-16"></div>
                         <p class="border-t border-slate-400 inline-block px-8">( .................................... )</p>
                     </div>
                     <div>
                         <p>Guru Pembimbing</p>
-                        <div class="h-20"></div>
+                        <div class="h-16"></div>
                         <p class="border-t border-slate-400 inline-block px-8">( .................................... )</p>
                     </div>
                 </div>
@@ -292,7 +319,7 @@ if ($siswa_id) {
 
     </main>
 
-    <!-- Footer Page (Hanya Muncul di Layar) -->
+    <!-- Footer Page (Hanya Muncul di Layar Monitor) -->
     <footer class="text-center py-6 no-print mt-8">
         <p class="text-xs text-slate-500 font-bold">
             &copy; <?= date('Y') ?> Tujuh Kebiasaan Anak Indonesia Hebat

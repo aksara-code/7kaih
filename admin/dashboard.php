@@ -2,200 +2,69 @@
 session_start();
 require_once '../koneksi.php';
 
-if (
-    !isset($_SESSION['user_id'])
-    || ($_SESSION['role'] ?? '') !== 'guru'
-    || ($_SESSION['guru_role'] ?? '') !== 'super-user'
-) {
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guru' || ($_SESSION['guru_role'] ?? '') !== 'super-user') {
     header('Location: ../index.php');
     exit();
 }
 
-$adminNama = $_SESSION['nama'] ?? 'Super Admin';
-$grades = ['X', 'XI', 'XII'];
-$selectedGrade = $_GET['tingkat'] ?? '';
-$selectedGrade = in_array($selectedGrade, $grades, true) ? $selectedGrade : '';
-$selectedClass = strtoupper(trim($_GET['kelas'] ?? ''));
-$classNames = [];
-$classCounts = [];
-$classIdsByName = [];
-
-foreach ($grades as $grade) {
-    for ($number = 1; $number <= 8; $number++) {
-        $className = $grade . $number;
-        $classCounts[$className] = 0;
-        if ($grade === $selectedGrade) {
-            $classNames[] = $className;
-        }
+function normalizeClassName(?string $className): ?string {
+    $raw = trim((string) ($className ?? ''));
+    if ($raw === '') {
+        return null;
     }
-}
 
-if (!in_array($selectedClass, $classNames, true)) {
-    $selectedClass = '';
-}
+    $clean = preg_replace('/\s+/', '', $raw);
+    $clean = str_replace('-', '', $clean);
 
-$stmtClasses = $pdo->query("SELECT id, nama_kelas FROM kelas");
-foreach ($stmtClasses->fetchAll() as $class) {
-    $classKey = strtoupper(preg_replace('/\s+/', '', $class['nama_kelas']));
-    if (isset($classCounts[$classKey])) {
-        $classIdsByName[$classKey] = (int) $class['id'];
+    if (!preg_match('/^(X|XI|XII)([1-8])$/i', $clean, $matches)) {
+        return null;
     }
+
+    return strtoupper($matches[1]) . $matches[2];
 }
 
-$stmtCounts = $pdo->query(
-    "SELECT UPPER(REPLACE(k.nama_kelas, ' ', '')) AS kelas_key, COUNT(DISTINCT s.id) AS jumlah
-     FROM kelas k
-     LEFT JOIN siswa s ON s.id_kelas = k.id
-     GROUP BY kelas_key"
-);
-foreach ($stmtCounts->fetchAll() as $row) {
-    if (isset($classCounts[$row['kelas_key']])) {
-        $classCounts[$row['kelas_key']] += (int) $row['jumlah'];
+function classGradeFromName(?string $className): ?string {
+    $normalized = normalizeClassName($className);
+    if ($normalized === null) {
+        return null;
     }
+
+    if (preg_match('/^XII/i', $normalized)) {
+        return 'XII';
+    }
+    if (preg_match('/^XI/i', $normalized)) {
+        return 'XI';
+    }
+    if (preg_match('/^X/i', $normalized)) {
+        return 'X';
+    }
+
+    return null;
 }
 
-$gradeCounts = array_fill_keys($grades, 0);
-foreach ($classCounts as $className => $count) {
-    $grade = preg_replace('/[0-9]+$/', '', $className);
-    $gradeCounts[$grade] += $count;
-}
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Super Admin — Tujuh Kebiasaan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
-<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col antialiased">
-    <header class="bg-emerald-800 text-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white text-emerald-800 flex items-center justify-center text-xl shadow">
-                    <i class="fa-solid fa-seedling"></i>
-                </div>
-                <div>
-                    <h1 class="font-black text-lg leading-tight">Dashboard Super Admin</h1>
-                    <p class="text-xs text-emerald-200 font-medium">Aplikasi Tujuh Kebiasaan</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <span class="block text-xs font-bold text-emerald-100"><?= htmlspecialchars($adminNama) ?></span>
-                    <span class="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase rounded bg-emerald-700 text-emerald-100">Super Admin</span>
-                </div>
-                <a href="../logout.php" onclick="return confirm('Yakin ingin keluar?')" aria-label="Keluar" class="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-xl font-bold text-xs shadow">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
-        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h2 class="text-lg font-black text-slate-900">Selamat datang, <?= htmlspecialchars($adminNama) ?></h2>
-                    <p class="text-xs text-slate-500 font-semibold mt-1">Pilih jenjang, lalu kelas untuk melihat rekap siswa.</p>
-                </div>
-                <div class="flex flex-wrap gap-2 text-xs font-bold">
-                    <span class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-xl">
-                        <i class="fa-solid fa-users mr-1.5"></i><?= array_sum($classCounts) ?> siswa terdata
-                    </span>
-                    <?php if ($selectedGrade !== ''): ?>
-                        <span class="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-xl">
-                            <?= htmlspecialchars($selectedGrade) ?> · <?= $gradeCounts[$selectedGrade] ?> siswa
-                        </span>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </section>
-
-        <?php if ($selectedGrade === ''): ?>
-            <section aria-labelledby="grade-heading">
-                <div class="mb-3">
-                    <h3 id="grade-heading" class="font-extrabold text-sm text-slate-800">Pilih jenjang kelas</h3>
-                    <p class="text-xs text-slate-500 mt-1">Rekap seluruh siswa dikelompokkan berdasarkan tingkat.</p>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <?php foreach ($grades as $grade): ?>
-                        <a href="?tingkat=<?= urlencode($grade) ?>" class="group bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-emerald-500 hover:shadow-md transition">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <span class="text-xs font-bold uppercase text-emerald-700">Jenjang</span>
-                                    <h4 class="text-2xl font-black text-slate-900 mt-1">Kelas <?= htmlspecialchars($grade) ?></h4>
-                                    <p class="text-xs font-semibold text-slate-500 mt-2">8 kelompok kelas · <?= $gradeCounts[$grade] ?> siswa</p>
-                                </div>
-                                <span class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:bg-emerald-700 group-hover:text-white transition">
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </span>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        <?php else: ?>
-            <nav class="flex items-center gap-2 text-xs font-bold mb-5" aria-label="Navigasi kelas">
-                <a href="dashboard.php" class="text-emerald-700 hover:text-emerald-900"><i class="fa-solid fa-house mr-1"></i>Semua jenjang</a>
-                <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
-                <?php if ($selectedClass !== ''): ?>
-                    <a href="?tingkat=<?= urlencode($selectedGrade) ?>" class="text-emerald-700 hover:text-emerald-900">Kelas <?= htmlspecialchars($selectedGrade) ?></a>
-                    <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>
-                    <span class="text-slate-500"><?= htmlspecialchars($selectedClass) ?></span>
-                <?php else: ?>
-                    <span class="text-slate-500">Kelas <?= htmlspecialchars($selectedGrade) ?></span>
-                <?php endif; ?>
-            </nav>
-
-            <section aria-labelledby="class-heading" class="mb-6">
-                <div class="mb-3">
-                    <h3 id="class-heading" class="font-extrabold text-sm text-slate-800">
-                        <?= $selectedClass !== '' ? 'Rekap kelas ' . htmlspecialchars($selectedClass) : 'Pilih nomor kelas · ' . htmlspecialchars($selectedGrade) ?>
-                    </h3>
-                    <?php if ($selectedClass === ''): ?>
-                        <p class="text-xs text-slate-500 mt-1">Pilih salah satu kelas untuk membuka daftar dan laporan siswa.</p>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($selectedClass === ''): ?>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <?php foreach ($classNames as $className): ?>
-                            <?php $classId = $classIdsByName[$className] ?? null; ?>
-                            <a href="../guru/dashboard.php?kelas=<?= urlencode($className) ?>" class="group bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-lg font-black text-slate-900"><?= htmlspecialchars($className) ?></span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-700 text-xs"></i>
-                                </div>
-                                <span class="block text-xs font-semibold text-slate-500 mt-1">
-                                    <?= $classCounts[$className] ?> siswa · Buka kelas
-                                </span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <?php $classId = $classIdsByName[$selectedClass] ?? null; ?>
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                        <?php if ($classId): ?>
-                            <p class="text-sm font-semibold text-slate-600">Kelas <?= htmlspecialchars($selectedClass) ?> terhubung ke dashboard wali kelas.</p>
-                            <a href="../guru/dashboard.php?kelas_id=<?= $classId ?>" class="mt-4 inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>Buka dashboard kelas
-                            </a>
-                        <?php else: ?>
-                            <p class="text-sm font-semibold text-slate-600">Kelas <?= htmlspecialchars($selectedClass) ?> belum terdaftar di database.</p>
-                            <p class="text-xs text-slate-500 mt-1">Tambahkan kelas dan wali kelasnya sebelum membuka rekap.</p>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </section>
+$adminNama = $_SESSION['nama'] ?? 'Super Admin';$grades = ['X', 'XI', 'XII'];$selectedGrade = $_GET['tingkat'] ?? '';$selectedGrade = in_array($selectedGrade, $grades, true) ? $selectedGrade : '';$selectedClass = strtoupper(trim($_GET['kelas'] ?? ''));$gradeClassMap = [    'X' => [],    'XI' => [],    'XII' => [],];$stmtClasses = $pdo->query(    "SELECT k.id, k.nama_kelas, g.nama AS nama_guru,            (SELECT COUNT(*) FROM siswa s WHERE s.id_kelas = k.id) AS jumlah_siswa     FROM kelas k     LEFT JOIN guru g ON g.id = k.id_guru     ORDER BY k.nama_kelas ASC");foreach ($stmtClasses->fetchAll() as $class) {    $normalizedClass = normalizeClassName($class['nama_kelas']);    if ($normalizedClass === null) {        continue;    }    $grade = classGradeFromName($normalizedClass);    if ($grade === null || !isset($gradeClassMap[$grade])) {        continue;    }    $gradeClassMap[$grade][] = [        'id' => (int) $class['id'],        'nama_kelas' => $normalizedClass,        'wali_kelas' => trim((string) ($class['nama_guru'] ?? '')) !== '' ? $class['nama_guru'] : 'Belum ditentukan',        'jumlah_siswa' => (int) ($class['jumlah_siswa'] ?? 0),    ];}foreach ($gradeClassMap as $grade => $classes) {    usort($classes, static fn ($a, $b) => strcmp($a['nama_kelas'], $b['nama_kelas']));    $gradeClassMap[$grade] = $classes;}$allClassNames = [];foreach ($gradeClassMap as $grade => $classes) {    foreach ($classes as $class) {        $allClassNames[] = $class['nama_kelas'];    }}if ($selectedGrade !== '' && !isset($gradeClassMap[$selectedGrade])) {    $selectedGrade = '';}if ($selectedGrade !== '' && $selectedClass !== '') {    $selectedClass = in_array($selectedClass, $allClassNames, true) ? $selectedClass : '';} else {    $selectedClass = '';}$selectedClassData = null;if ($selectedClass !== '') {    foreach ($gradeClassMap as $grade => $classes) {        foreach ($classes as $class) {            if ($class['nama_kelas'] === $selectedClass) {                $selectedClassData = $class;                break 2;            }        }    }    if ($selectedClassData !== null) {        $stmtStudents = $pdo->prepare(            'SELECT id, nama, nisn FROM siswa WHERE id_kelas = :id_kelas ORDER BY nama ASC'        );        $stmtStudents->execute(['id_kelas' => $selectedClassData['id']]);        $selectedClassData['siswa'] = $stmtStudents->fetchAll();    }}$gradeCounts = [];$totalStudents = 0;foreach ($grades as $grade) {    $count = 0;    foreach ($gradeClassMap[$grade] as $class) {        $count += (int) $class['jumlah_siswa'];    }    $gradeCounts[$grade] = $count;    $totalStudents += $count;}$habitMeta = [    'bangun' => ['label' => 'Bangun Pagi', 'color' => '#f59e0b'],    'ibadah' => ['label' => 'Beribadah', 'color' => '#10b981'],    'olahraga' => ['label' => 'Olahraga', 'color' => '#3b82f6'],    'makan' => ['label' => 'Makan Sehat', 'color' => '#f97316'],    'belajar' => ['label' => 'Gemar Belajar', 'color' => '#8b5cf6'],    'tidur' => ['label' => 'Tidur Cepat', 'color' => '#6366f1'],    'bermasyarakat' => ['label' => 'Bermasyarakat', 'color' => '#14b8a6'],];$selectedStudentIds = [];if ($selectedGrade !== '') {    $classIdsForGrade = [];    foreach ($gradeClassMap[$selectedGrade] as $class) {        $classIdsForGrade[] = (int) $class['id'];    }    if (!empty($classIdsForGrade)) {        $placeholders = implode(',', array_fill(0, count($classIdsForGrade), '?'));        $stmtSelectedStudents = $pdo->prepare(            "SELECT id FROM siswa WHERE id_kelas IN ($placeholders)"        );        $stmtSelectedStudents->execute($classIdsForGrade);        $selectedStudentIds = array_map('intval', array_column($stmtSelectedStudents->fetchAll(), 'id'));    }}$activityStats = [];foreach (array_keys($habitMeta) as $habitKey) {    $activityStats[$habitKey] = 0;}$activityFilter = '1=1';$params = [];if ($selectedGrade !== '' && !empty($selectedStudentIds)) {    $studentPlaceholders = implode(',', array_fill(0, count($selectedStudentIds), '?'));    $activityFilter = "id_siswa IN ($studentPlaceholders)";    $params = $selectedStudentIds;} elseif ($selectedGrade !== '') {    $activityFilter = '1=0';}$monthStart = date('Y-m-01');$monthEnd = date('Y-m-t 23:59:59');if ($activityFilter !== '1=0') {    $sql = "SELECT kategori, COUNT(*) AS total FROM log_aktivitas WHERE $activityFilter AND waktu_mulai >= ? AND waktu_mulai <= ? GROUP BY kategori";    $params[] = $monthStart;    $params[] = $monthEnd;    $stmtActivity = $pdo->prepare($sql);    $stmtActivity->execute($params);    foreach ($stmtActivity->fetchAll() as $row) {        if (isset($activityStats[$row['kategori']])) {            $activityStats[$row['kategori']] = (int) $row['total'];        }    }}$activityMax = max(array_values($activityStats));$activityTotal = array_sum($activityStats);$donutSegments = [];$donutStart = 0;foreach (array_keys($habitMeta) as $habitKey) {    $value = $activityStats[$habitKey];    if ($activityTotal > 0) {        $percent = ($value / $activityTotal) * 100;        $end = $donutStart + $percent;        $donutSegments[] = sprintf('%s %s%% %s%%', $habitMeta[$habitKey]['color'], $donutStart, $end);        $donutStart = $end;    }}$donutBackground = count($donutSegments) > 0    ? 'conic-gradient(' . implode(', ', $donutSegments) . ')'    : 'conic-gradient(#e2e8f0 0 100%)';?><!DOCTYPE html><html lang="id"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Dashboard Super Admin — Tujuh Kebiasaan</title>    <script src="https://cdn.tailwindcss.com"></script>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">    <style>        body { font-family: 'Plus Jakarta Sans', sans-serif; }    </style></head><body class="bg-slate-100 min-h-screen text-slate-800 antialiased flex">    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden transition-opacity duration-300"></div>    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white flex flex-col justify-between transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 shadow-2xl shrink-0">        <div>            <div class="p-5 flex items-center justify-between border-b border-emerald-800/80">                <div class="flex items-center gap-3">                    <div class="w-10 h-10 rounded-xl bg-white text-emerald-800 flex items-center justify-center font-black text-xl shadow">                        <i class="fa-solid fa-seedling"></i>                    </div>                    <div>                        <h1 class="font-black text-sm leading-tight text-white">7 Kebiasaan</h1>                        <p class="text-[11px] text-emerald-300 font-medium">Anak Indonesia Hebat</p>                    </div>                </div>                <button id="close-sidebar" class="lg:hidden text-emerald-200 hover:text-white p-1 text-lg">                    <i class="fa-solid fa-xmark"></i>                </button>            </div>            <nav class="p-4 space-y-1.5">                <div class="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">                    Menu Utama                </div>                <a href="dashboard.php" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-emerald-800 text-white font-bold text-xs shadow-sm transition-all">                    <i class="fa-solid fa-chart-pie w-5 text-center text-emerald-300"></i>                    <span>Dashboard</span>                </a>            </nav>        </div>        <div class="p-4 border-t border-emerald-800/80 bg-emerald-950/40">            <div class="flex items-center gap-3 mb-3 px-2">                <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shrink-0">                    <i class="fa-solid fa-user-shield"></i>                </div>                <div class="overflow-hidden">                    <p class="text-xs font-extrabold text-white truncate"><?= htmlspecialchars($adminNama) ?></p>                    <span class="inline-block px-2 py-0.5 text-[9px] font-extrabold uppercase rounded bg-emerald-800 text-emerald-200 mt-0.5">                        Super Admin                    </span>                </div>            </div>            <a href="../logout.php" onclick="return confirm('Yakin ingin keluar?')" class="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-red-600/90 hover:bg-red-600 text-white rounded-xl font-bold text-xs transition-all shadow">                <i class="fa-solid fa-right-from-bracket"></i>                <span>Keluar Aplikasi</span>            </a>        </div>    </aside>    <div class="flex-1 flex flex-col min-w-0 min-h-screen">        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">                <div class="flex items-center gap-3">                    <button id="open-sidebar" type="button" aria-label="Buka menu" title="Buka menu" class="lg:hidden p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">                        <i class="fa-solid fa-bars text-lg"></i>                    </button>                    <div>                        <h1 class="font-extrabold text-base sm:text-lg text-slate-900 leading-tight">Dashboard Super Admin</h1>                        <p class="text-xs text-slate-500 font-medium hidden sm:block">Aplikasi Monitoring 7 Kebiasaan</p>                    </div>                </div>                <div class="flex items-center gap-3">                    <div class="text-right hidden sm:block">                        <span class="block text-xs font-bold text-slate-800"><?= htmlspecialchars($adminNama) ?></span>                        <span class="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase rounded bg-emerald-100 text-emerald-800 border border-emerald-200">Super Admin</span>                    </div>                </div>            </div>        </header>        <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">                <div>                    <h2 class="text-lg font-black text-slate-900">Selamat datang, <?= htmlspecialchars($adminNama) ?></h2>                    <p class="text-xs text-slate-500 font-semibold mt-1">Pilih jenjang, lalu kelas untuk melihat rekap siswa dan monitoring 7 kegiatan.</p>                </div>                <div class="flex flex-wrap gap-2 text-xs font-bold">                    <span class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-xl">                        <i class="fa-solid fa-users mr-1.5"></i><?= $totalStudents ?> siswa terdata                    </span>                    <?php if ($selectedGrade !== ''): ?>                        <span class="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-xl">                            Kelas <?= htmlspecialchars($selectedGrade) ?> · <?= $gradeCounts[$selectedGrade] ?> siswa                        </span>                    <?php endif; ?>                </div>            </div>        </section>        <?php if ($selectedGrade === ''): ?>            <section aria-labelledby="grade-heading">                <div class="mb-3">                    <h3 id="grade-heading" class="font-extrabold text-sm text-slate-800">Pilih jenjang kelas</h3>                    <p class="text-xs text-slate-500 mt-1">Tingkat kelas tetap tampil: X, XI, XII. Kelas 1–8 akan muncul saat data kelas sudah dibuat.</p>                </div>                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">                    <?php foreach ($grades as $grade): ?>                        <a href="?tingkat=<?= urlencode($grade) ?>" class="group bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-emerald-500 hover:shadow-md transition">                            <div class="flex items-center justify-between gap-3">                                <div>                                    <span class="text-xs font-bold uppercase text-emerald-700">Jenjang</span>                                    <h4 class="text-2xl font-black text-slate-900 mt-1">Kelas <?= htmlspecialchars($grade) ?></h4>                                    <p class="text-xs font-semibold text-slate-500 mt-2"><?= count($gradeClassMap[$grade]) ?> kelas terdaftar · <?= $gradeCounts[$grade] ?> siswa</p>                                </div>                                <span class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:bg-emerald-700 group-hover:text-white transition">                                    <i class="fa-solid fa-arrow-right"></i>                                </span>                            </div>                        </a>                    <?php endforeach; ?>                </div>            </section>        <?php else: ?>            <nav class="flex items-center gap-2 text-xs font-bold mb-5" aria-label="Navigasi kelas">                <a href="dashboard.php" class="text-emerald-700 hover:text-emerald-900"><i class="fa-solid fa-house mr-1"></i>Semua jenjang</a>                <i class="fa-solid fa-chevron-right text-[9px] text-slate-400"></i>                <span class="text-slate-500">Kelas <?= htmlspecialchars($selectedGrade) ?></span>            </nav>            <section class="mb-6">                <div class="mb-3">                    <h3 class="font-extrabold text-sm text-slate-800">Pilih kelas pada jenjang <?= htmlspecialchars($selectedGrade) ?></h3>                    <p class="text-xs text-slate-500 mt-1">Kelas 1–8 hanya akan muncul setelah data kelas dibuat di sistem.</p>                </div>                <?php if (!empty($gradeClassMap[$selectedGrade])): ?>                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">                        <?php foreach ($gradeClassMap[$selectedGrade] as $class): ?>                            <a href="../guru/dashboard.php?kelas_id=<?= (int) $class['id'] ?>" class="group bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition">                                <div class="flex items-center justify-between gap-2">                                    <span class="text-lg font-black text-slate-900"><?= htmlspecialchars($class['nama_kelas']) ?></span>                                    <i class="fa-solid fa-arrow-up-right-from-square text-emerald-700 text-xs"></i>                                </div>                                <span class="block text-xs font-semibold text-slate-500 mt-1"><?= $class['jumlah_siswa'] ?> siswa</span>                            </a>                        <?php endforeach; ?>                    </div>                <?php else: ?>                    <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-6 text-center text-sm text-slate-500 shadow-sm">                        Belum ada kelas yang dibuat untuk jenjang <?= htmlspecialchars($selectedGrade) ?>.                    </div>                <?php endif; ?>            </section>            <?php if ($selectedClass !== ''): ?>                <?php if ($selectedClassData !== null): ?>                    <section class="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">                            <div>                                <p class="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Detail kelas</p>                                <h3 class="mt-2 text-2xl font-black text-slate-900">Kelas <?= htmlspecialchars($selectedClass) ?></h3>                                <p class="mt-1 text-sm text-slate-500">Wali kelas: <span class="font-bold text-slate-800"><?= htmlspecialchars($selectedClassData['wali_kelas']) ?></span></p>                            </div>                            <a href="../guru/dashboard.php?kelas_id=<?= (int) $selectedClassData['id'] ?>" class="inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">                                <i class="fa-solid fa-arrow-up-right-from-square"></i>                                Buka dashboard wali kelas                            </a>                        </div>                        <div class="mt-5 border border-slate-200 rounded-2xl overflow-hidden">                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">                                <h4 class="text-sm font-black text-slate-800">Daftar siswa di kelas</h4>                            </div>                            <?php if (!empty($selectedClassData['siswa'])): ?>                                <div class="divide-y divide-slate-200">                                    <?php foreach ($selectedClassData['siswa'] as $siswa): ?>                                        <div class="flex items-center justify-between gap-4 px-4 py-3">                                            <div>                                                <p class="font-bold text-slate-900"><?= htmlspecialchars($siswa['nama']) ?></p>                                                <p class="text-xs text-slate-500">NISN: <?= htmlspecialchars($siswa['nisn'] ?? '-') ?></p>                                            </div>                                            <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 px-2.5 py-1 text-[10px] font-extrabold uppercase">                                                <i class="fa-solid fa-user-check"></i> Siswa                                            </span>                                        </div>                                    <?php endforeach; ?>                                </div>                            <?php else: ?>                                <div class="px-4 py-6 text-center text-sm text-slate-500">                                    Belum ada siswa yang terdaftar di kelas ini.                                </div>                            <?php endif; ?>                        </div>                    </section>                <?php else: ?>                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-sm text-slate-600">                        Kelas <?= htmlspecialchars($selectedClass) ?> belum ditemukan di database. Silakan cek kembali data kelas yang dibuat.                    </div>                <?php endif; ?>            <?php endif; ?>            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6">                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">                    <div>                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Status 7 kegiatan</p>                        <h3 class="mt-1 text-lg font-black text-slate-900">Monitoring aktivitas siswa</h3>                    </div>                    <span class="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase">                        Bulan ini                    </span>                </div>                <div class="mt-5 grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6">                    <div class="flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-200 p-5">                        <div class="relative w-40 h-40 rounded-full" style="background: <?= htmlspecialchars($donutBackground) ?>;">                            <div class="absolute inset-[22px] rounded-full bg-white shadow-inner"></div>                            <div class="absolute inset-0 flex items-center justify-center flex-col z-10">                                <span class="text-3xl font-black text-slate-900"><?= $activityTotal ?></span>                                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Catatan</span>                            </div>                        </div>                        <div class="mt-4 w-full space-y-2">                            <?php foreach (array_keys($habitMeta) as $habitKey): ?>                                <?php $value = $activityStats[$habitKey]; ?>                                <?php $isEmpty = $value <= 0; ?>                                <div class="flex items-center justify-between gap-2">                                    <div class="flex items-center gap-2 text-xs font-bold text-slate-700">                                        <span class="inline-block w-2.5 h-2.5 rounded-full" style="background: <?= $isEmpty ? '#cbd5e1' : $habitMeta[$habitKey]['color'] ?>;"></span>                                        <?= $habitMeta[$habitKey]['label'] ?>                                    </div>                                    <span class="text-xs font-black text-slate-700"><?= $value ?></span>                                </div>                            <?php endforeach; ?>                        </div>                    </div>                    <div class="space-y-4">                        <?php foreach (array_keys($habitMeta) as $habitKey): ?>                            <?php $value = $activityStats[$habitKey]; ?>                            <?php $percent = $activityTotal > 0 ? round(($value / $activityTotal) * 100) : 0; ?>                            <?php $barWidth = $value > 0 ? max(8, min(100, $percent)) : 0; ?>                            <?php $barColor = $value > 0 ? $habitMeta[$habitKey]['color'] : '#cbd5e1'; ?>                            <div>                                <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">                                    <span><?= $habitMeta[$habitKey]['label'] ?></span>                                    <span><?= $value ?> catatan</span>                                </div>                                <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">                                    <div class="h-full rounded-full" style="width: <?= $barWidth ?>%; background: <?= $barColor ?>;"></div>                                </div>                            </div>                        <?php endforeach; ?>                    </div>                </div>                <div class="mt-6 overflow-x-auto">                    <table class="min-w-full text-left text-sm text-slate-700">                        <thead>                            <tr class="bg-slate-50 text-slate-700">                                <th class="px-4 py-3 font-extrabold uppercase tracking-wide text-[10px]">Kegiatan</th>                                <th class="px-4 py-3 font-extrabold uppercase tracking-wide text-[10px]">Catatan</th>                                <th class="px-4 py-3 font-extrabold uppercase tracking-wide text-[10px]">Persentase</th>                            </tr>                        </thead>                        <tbody>                            <?php foreach (array_keys($habitMeta) as $habitKey): ?>                                <?php $value = $activityStats[$habitKey]; ?>                                <?php $percent = $activityTotal > 0 ? round(($value / $activityTotal) * 100) : 0; ?>                                <?php $barWidth = $value > 0 ? max(8, min(100, $percent)) : 0; ?>                                <?php $barColor = $value > 0 ? $habitMeta[$habitKey]['color'] : '#cbd5e1'; ?>                                <tr class="border-b border-slate-200">                                    <td class="px-4 py-3 font-bold"><?= $habitMeta[$habitKey]['label'] ?></td>                                    <td class="px-4 py-3"><?= $value ?></td>                                    <td class="px-4 py-3">                                        <span class="inline-flex items-center gap-2">                                            <span class="inline-block w-20 h-2.5 rounded-full bg-slate-100 overflow-hidden">                                                <span class="block h-full rounded-full" style="width: <?= $barWidth ?>%; background: <?= $barColor ?>;"></span>                                            </span>                                            <span class="font-bold"><?= $percent ?>%</span>                                        </span>                                    </td>                                </tr>                            <?php endforeach; ?>                        </tbody>                    </table>                </div>            </section>
         <?php endif; ?>
     </main>
 
-    <footer class="text-center py-6 mt-4">
-        <p class="text-xs text-slate-500 font-bold">&copy; <?= date('Y') ?> Tujuh Kebiasaan Anak Indonesia Hebat</p>
-    </footer>
+        <footer class="text-center py-6 mt-4">
+            <p class="text-xs text-slate-500 font-bold">&copy; <?= date('Y') ?> Tujuh Kebiasaan Anak Indonesia Hebat</p>
+        </footer>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const openBtn = document.getElementById('open-sidebar');
+        const closeBtn = document.getElementById('close-sidebar');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        if (openBtn) openBtn.addEventListener('click', toggleSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    </script>
 </body>
 </html>

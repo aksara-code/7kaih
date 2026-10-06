@@ -21,26 +21,49 @@ if ($guru_role === 'admin') {
     $_SESSION['guru_role'] = $guru_role;
 }
 
+$is_super_admin = false;
 if ($guru_role === 'super-user') {
-    header("Location: ../admin/dashboard.php");
-    exit();
-}
+    $classIdParam = filter_input(INPUT_GET, 'kelas_id', FILTER_VALIDATE_INT);
+    if ($classIdParam === false || $classIdParam === null) {
+        header('Location: ../admin/dashboard.php');
+        exit();
+    }
 
-if ($guru_role !== 'wali-kelas') {
-    header("Location: ../logout.php");
-    exit();
+    $is_super_admin = true;
+    $stmt_wali = $pdo->prepare(
+        "SELECT k.id, k.nama_kelas, g.nama AS nama_guru
+         FROM kelas k
+         LEFT JOIN guru g ON g.id = k.id_guru
+         WHERE k.id = :id_kelas
+         LIMIT 1"
+    );
+    $stmt_wali->execute(['id_kelas' => $classIdParam]);
+    $kelas_wali = $stmt_wali->fetch();
+
+    if (!$kelas_wali) {
+        header('Location: ../admin/dashboard.php');
+        exit();
+    }
+} else {
+    if ($guru_role !== 'wali-kelas') {
+        header("Location: ../logout.php");
+        exit();
+    }
+
+    $stmt_wali = $pdo->prepare("SELECT id, nama_kelas FROM kelas WHERE id_guru = :id_guru LIMIT 1");
+    $stmt_wali->execute(['id_guru' => $guru_id]);
+    $kelas_wali = $stmt_wali->fetch();
 }
 
 $siswa_list = [];
 $nama_kelas_wali = '';
 
-// Wali kelas hanya melihat siswa dari kelas yang diampunya.
-$stmt_wali = $pdo->prepare("SELECT id, nama_kelas FROM kelas WHERE id_guru = :id_guru LIMIT 1");
-$stmt_wali->execute(['id_guru' => $guru_id]);
-$kelas_wali = $stmt_wali->fetch();
-
 if ($kelas_wali) {
     $nama_kelas_wali = $kelas_wali['nama_kelas'];
+    if ($is_super_admin && !empty($kelas_wali['nama_guru'])) {
+        $guru_nama = $kelas_wali['nama_guru'];
+    }
+
     $stmt = $pdo->prepare("
         SELECT s.*, k.nama_kelas
         FROM siswa s
@@ -196,6 +219,15 @@ $list_kebiasaan = [
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-4">
+
+            <?php if ($is_super_admin): ?>
+                <div class="flex justify-start">
+                    <a href="../admin/dashboard.php" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Kembali ke Dashboard
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <!-- Identitas Guru -->
             <section class="flex items-center gap-4 rounded-2xl border border-slate-200 border-l-[6px] border-l-blue-900 bg-white p-5 shadow-sm">

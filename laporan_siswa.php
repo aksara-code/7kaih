@@ -94,6 +94,7 @@ $kategori_kebiasaan = [
 
 $daftar_kebiasaan = [];
 $hari_berjalan = (int) date('j');
+$jumlah_hari_dalam_bulan = (int) date('t');
 $daftar_nama_bulan = [
     1 => 'Januari',
     'Februari',
@@ -136,7 +137,7 @@ if ($siswa) {
 
     foreach ($kategori_kebiasaan as $kebiasaan) {
         $total = $total_per_kategori[$kebiasaan['kode']];
-        $persen = min(100, (int) round(($total / $hari_berjalan) * 100));
+        $persen = min(100, (int) round(($total / $jumlah_hari_dalam_bulan) * 100));
 
         if ($total === 0) {
             $status = 'Belum Ada Data';
@@ -242,7 +243,7 @@ if ($siswa) {
                             <i class="fa-solid fa-seedling text-3xl"></i>
                         </div>
                         <div>
-                            <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Rekapitulasi Kebiasaan</h2>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Rekapitulasi</h2>
                             <p class="text-xs sm:text-sm font-semibold text-emerald-700">Tujuh Kebiasaan Anak Indonesia Hebat</p>
                             <p class="text-xs text-slate-500 font-medium mt-0.5">Tanggal Cetak: <?= htmlspecialchars($tanggal_laporan) ?>, <?= date('H:i') ?> WIB</p>
                         </div>
@@ -320,7 +321,7 @@ if ($siswa) {
                                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
                                     <div class="flex justify-between text-xs font-bold">
                                         <span class="text-slate-500">Capaian Rutinitas:</span>
-                                        <span class="text-slate-800"><?= $kb['total'] ?>/<?= $hari_berjalan ?> hari (<?= $kb['persen'] ?>%)</span>
+                                        <span class="text-slate-800"><?= $kb['total'] ?>/<?= $jumlah_hari_dalam_bulan ?> hari (<?= $kb['persen'] ?>%)</span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                                         <div class="h-full bg-emerald-600 rounded-full" style="width: <?= $kb['persen'] ?>%;"></div>

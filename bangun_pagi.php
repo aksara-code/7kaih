@@ -17,7 +17,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased">
+<body class="flex min-h-screen flex-col bg-[#edf1ee] text-slate-800 antialiased">
     <div class="relative overflow-hidden rounded-b-[32px] bg-[#0c6d4d] pb-16 pt-6 shadow-[0_18px_30px_rgba(12,109,77,0.22)]">
         <div class="absolute -right-12 -top-8 h-36 w-36 rounded-full bg-[#0d7f5a]/30 blur-2xl"></div>
         <div class="absolute -left-10 bottom-2 h-32 w-32 rounded-full bg-[#0a5e41]/30 blur-2xl"></div>
@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] flex-1 px-4">
         <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
             Catatan kegiatan bangun pagi berhasil disimpan!
         </div>
@@ -106,7 +106,7 @@
         </div>
     </div>
 
-    <footer class="py-10 text-center text-sm text-slate-500">
+    <footer class="mt-auto py-10 text-center text-sm text-slate-500">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
@@ -408,24 +408,26 @@
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
             historyList.innerHTML = pageItems.map(item => `
-                <div class="rounded-[22px] border border-[#ebf3ee] bg-[#f9fbfa] p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-                    <div class="flex items-start gap-3">
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
-                                <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                <span class="text-slate-400">•</span>
-                                <span class="font-extrabold text-slate-700">${formatClock(item.time)}</span>
+                <div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-emerald-200 hover:bg-white hover:shadow-md">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="mb-1.5 flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                                    📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </span>
+                                <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                    ⏰ ${formatClock(item.time)}
+                                </span>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Bangun pagi')}</p>
-                            <p class="text-[11px] leading-relaxed text-slate-600">
+                            <h4 class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Bangun pagi')}</h4>
+                            <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">
                                 ${item.note ? escapeHtml(item.note) : 'Catatan bangun pagi hari ini.'}
                             </p>
                         </div>
 
-                        <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
-                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan bangun pagi" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">☀️</div>'}
+                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
+                            ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto kegiatan bangun pagi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">☀️</div>'}
                         </div>
                     </div>
                 </div>

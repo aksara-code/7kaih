@@ -16,7 +16,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased">
+<body class="flex min-h-screen flex-col bg-[#edf1ee] text-slate-800 antialiased">
     <div class="relative overflow-hidden rounded-b-[32px] bg-[#0c6d4d] pb-16 pt-6 shadow-[0_18px_30px_rgba(12,109,77,0.22)]">
         <div class="absolute -right-12 -top-8 h-36 w-36 rounded-full bg-[#0d7f5a]/30 blur-2xl"></div>
         <div class="absolute -left-10 bottom-2 h-32 w-32 rounded-full bg-[#0a5e41]/30 blur-2xl"></div>
@@ -51,7 +51,7 @@
         </div>
     </div>
 
-    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] flex-1 px-4">
         <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
             Catatan kegiatan ibadah berhasil disimpan!
         </div>
@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <footer class="py-10 text-center text-sm text-slate-500">
+    <footer class="mt-auto py-10 text-center text-sm text-slate-500">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 

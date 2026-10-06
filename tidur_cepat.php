@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#f1f5f3] text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+<body class="flex min-h-screen flex-col bg-[#f1f5f3] text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
 
     <!-- Header Section -->
     <div class="relative overflow-hidden rounded-b-[36px] bg-gradient-to-br from-[#0c6d4d] via-[#09573d] to-[#06422e] pb-16 pt-7 shadow-[0_20px_40px_rgba(12,109,77,0.25)]">
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Main Content Container -->
-    <main class="relative z-20 mx-auto -mt-10 w-full max-w-[480px] px-4 pb-12">
+    <main class="relative z-20 mx-auto -mt-10 w-full max-w-[480px] flex-1 px-4 pb-12">
         <div id="successNotification" class="mb-3 hidden rounded-r-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm" role="status" aria-live="polite">
             Catatan kegiatan tidur cepat berhasil disimpan!
         </div>
@@ -139,7 +139,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="py-8 text-center text-xs font-medium text-slate-400">
+    <footer class="mt-auto py-8 text-center text-xs font-medium text-slate-400">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 

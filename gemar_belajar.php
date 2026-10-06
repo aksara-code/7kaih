@@ -16,7 +16,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#edf1ee] text-slate-800 antialiased selection:bg-emerald-200">
+<body class="flex min-h-screen flex-col bg-[#edf1ee] text-slate-800 antialiased selection:bg-emerald-200">
 
     <!-- Header Section -->
     <div class="relative overflow-hidden rounded-b-[32px] bg-[#0c6d4d] pb-16 pt-6 shadow-[0_18px_30px_rgba(12,109,77,0.22)]">
@@ -54,7 +54,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] px-4">
+    <div class="relative z-20 mx-auto -mt-12 w-full max-w-[460px] flex-1 px-4">
         <!-- Notifikasi Sukses -->
         <div id="successNotification" class="mb-3 hidden rounded-xl border-l-4 border-emerald-600 bg-emerald-100 p-3.5 text-xs font-bold text-emerald-900 shadow-sm transition-all" role="status" aria-live="polite">
             <i class="fa-solid fa-circle-check mr-1.5 text-emerald-700"></i>
@@ -128,7 +128,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="py-10 text-center text-xs text-slate-500">
+    <footer class="mt-auto py-10 text-center text-xs text-slate-500">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 

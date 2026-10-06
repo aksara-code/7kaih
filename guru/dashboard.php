@@ -3,83 +3,88 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 date_default_timezone_set('Asia/Jakarta');
+
 require_once '../koneksi.php';
 
-// Validasi Keamanan Akses Guru
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guru') {
-    header("Location: ../index.php");
+    header('Location: ../index.php');
     exit();
 }
 
-if (($_SESSION['guru_role'] ?? '') === 'super-user' && empty($_GET['kelas_id']) && empty($_GET['kelas'])) {
-    header("Location: ../admin/dashboard.php");
+if (($_SESSION['guru_role'] ?? '') === 'super-user') {
+    header('Location: ../admin/dashboard.php');
     exit();
 }
 
-$guru_id   = $_SESSION['user_id'];
-$guru_nama = $_SESSION['nama'];
-$guru_role = $_SESSION['guru_role'] ?? 'admin';
+$guru_id = (int) ($_SESSION['user_id'] ?? 0);
+$guru_nama = $_SESSION['nama'] ?? 'Guru';
+$guru_role = $_SESSION['guru_role'] ?? 'wali-kelas';
 
 $siswa_list = [];
 $kelas_list = [];
-$selected_kelas = $_GET['kelas_id'] ?? null;
-$selected_class_name = strtoupper(trim($_GET['kelas'] ?? ''));
+$selected_kelas = isset($_GET['kelas_id']) ? (int) $_GET['kelas_id'] : null;
+$selected_class_name = strtoupper(trim((string) ($_GET['kelas'] ?? '')));
 $nama_kelas_wali = '';
-$stmt = null;
 
 if ($guru_role === 'super-user') {
-    // TIM 7 KAIH: Mengambil semua daftar kelas untuk dropdown filter
     $stmt_kelas = $pdo->query("SELECT * FROM kelas ORDER BY nama_kelas ASC");
     $kelas_list = $stmt_kelas->fetchAll();
 
     if ($selected_class_name !== '') {
-        $classKey = preg_replace('/\s+/', '', $selected_class_name);
-        $stmt_selected_class = $pdo->prepare("SELECT id, nama_kelas FROM kelas WHERE UPPER(REPLACE(nama_kelas, ' ', '')) = :nama_kelas LIMIT 1");
-        $stmt_selected_class->execute(['nama_kelas' => $classKey]);
+        $class_key = preg_replace('/\s+/', '', $selected_class_name);
+        $stmt_selected_class = $pdo->prepare(
+            "SELECT id, nama_kelas FROM kelas WHERE UPPER(REPLACE(nama_kelas, ' ', '')) = :nama_kelas LIMIT 1"
+        );
+        $stmt_selected_class->execute(['nama_kelas' => $class_key]);
         $selected_class = $stmt_selected_class->fetch();
-        $nama_kelas_wali = $selected_class_name;
 
         if ($selected_class) {
-            $selected_kelas = $selected_class['id'];
+            $selected_kelas = (int) $selected_class['id'];
             $nama_kelas_wali = $selected_class['nama_kelas'];
-            $stmt = $pdo->prepare("SELECT s.*, k.nama_kelas FROM siswa s LEFT JOIN kelas k ON s.id_kelas = k.id WHERE s.id_kelas = :kelas_id ORDER BY s.nama ASC");
-            $stmt->execute(['kelas_id' => $selected_kelas]);
+        } else {
+            $nama_kelas_wali = $selected_class_name;
         }
-    } elseif (!empty($selected_kelas)) {
+    }
+
+    if ($selected_kelas !== null && $selected_kelas > 0) {
         $stmt = $pdo->prepare("
-            SELECT s.*, k.nama_kelas 
-            FROM siswa s 
-            LEFT JOIN kelas k ON s.id_kelas = k.id 
-            WHERE s.id_kelas = :kelas_id 
+            SELECT s.*, k.nama_kelas
+            FROM siswa s
+            LEFT JOIN kelas k ON s.id_kelas = k.id
+            WHERE s.id_kelas = :kelas_id
             ORDER BY s.nama ASC
         ");
         $stmt->execute(['kelas_id' => $selected_kelas]);
     } else {
         $stmt = $pdo->query("
-            SELECT s.*, k.nama_kelas 
-            FROM siswa s 
-            LEFT JOIN kelas k ON s.id_kelas = k.id 
+            SELECT s.*, k.nama_kelas
+            FROM siswa s
+            LEFT JOIN kelas k ON s.id_kelas = k.id
             ORDER BY k.nama_kelas ASC, s.nama ASC
         ");
     }
-    if ($stmt instanceof PDOStatement) {
-        $siswa_list = $stmt->fetchAll();
-    }
 
+    $siswa_list = $stmt->fetchAll();
 } else {
     $stmt_wali = $pdo->prepare("SELECT id, nama_kelas FROM kelas WHERE id_guru = :id_guru LIMIT 1");
     $stmt_wali->execute(['id_guru' => $guru_id]);
     $kelas_wali = $stmt_wali->fetch();
 
     if ($kelas_wali) {
-        $id_kelas_wali = $kelas_wali['id'];
+        $id_kelas_wali = (int) $kelas_wali['id'];
         $nama_kelas_wali = $kelas_wali['nama_kelas'];
-        $stmt = $pdo->prepare("SELECT s.*, k.nama_kelas FROM siswa s LEFT JOIN kelas k ON s.id_kelas = k.id WHERE s.id_kelas = :id_kelas ORDER BY s.nama ASC");
+
+        $stmt = $pdo->prepare("
+            SELECT s.*, k.nama_kelas
+            FROM siswa s
+            LEFT JOIN kelas k ON s.id_kelas = k.id
+            WHERE s.id_kelas = :id_kelas
+            ORDER BY s.nama ASC
+        ");
         $stmt->execute(['id_kelas' => $id_kelas_wali]);
         $siswa_list = $stmt->fetchAll();
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -127,19 +132,20 @@ if ($guru_role === 'super-user') {
                 <h2 class="text-lg font-black text-slate-900">Selamat Datang, <?= htmlspecialchars($guru_nama) ?></h2>
                 <p class="text-xs text-slate-500 font-semibold mt-0.5">
                     <?= $guru_role === 'super-user'
-                        ? ($nama_kelas_wali !== '' ? 'Daftar siswa kelas ' . htmlspecialchars($nama_kelas_wali) . '.' : 'Akses Tim 7 KAIH: Memantau seluruh data siswa di semua kelas.')
+                        ? ($nama_kelas_wali !== ''
+                            ? 'Daftar siswa kelas ' . htmlspecialchars($nama_kelas_wali) . '.'
+                            : 'Akses Tim 7 KAIH: Memantau seluruh data siswa di semua kelas.')
                         : 'Akses Wali Kelas: Memantau siswa kelas ' . htmlspecialchars($nama_kelas_wali) . '.' ?>
                 </p>
             </div>
+
             <?php if ($guru_role === 'super-user'): ?>
                 <form method="GET" action="" class="w-full sm:w-auto flex items-center gap-2">
                     <label for="kelas_id" class="text-xs font-bold text-slate-700 shrink-0">Filter Kelas:</label>
                     <select name="kelas_id" id="kelas_id" onchange="this.form.submit()" class="bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-600">
-                        <?php if ($selected_class_name !== '' && empty($selected_kelas)): ?>
-                            <option value="" selected><?= htmlspecialchars($selected_class_name) ?> · belum terdaftar</option>
-                        <?php endif; ?>
+                        <option value="">-- Semua Kelas --</option>
                         <?php foreach ($kelas_list as $kelas): ?>
-                            <option value="<?= (int) $kelas['id'] ?>" <?= ((string) $selected_kelas === (string) $kelas['id']) ? 'selected' : '' ?>>
+                            <option value="<?= (int) $kelas['id'] ?>" <?= ($selected_kelas !== null && (int) $selected_kelas === (int) $kelas['id']) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($kelas['nama_kelas']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -157,6 +163,7 @@ if ($guru_role === 'super-user') {
                     </span>
                 </h3>
             </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs sm:text-sm">
                     <thead>
@@ -178,13 +185,20 @@ if ($guru_role === 'super-user') {
                                     <td class="p-4"><?= htmlspecialchars($siswa['nama_kelas'] ?? 'Belum Diatur') ?></td>
                                     <td class="p-4 text-center">
                                         <a href="laporan_siswa.php?id=<?= (int) $siswa['id'] ?>" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5">
-                                            <i class="fa-solid fa-file-lines"></i><span>Laporan</span>
+                                            <i class="fa-solid fa-file-lines"></i>
+                                            <span>Laporan</span>
                                         </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium"><?= $nama_kelas_wali !== '' ? 'Belum ada siswa di kelas ' . htmlspecialchars($nama_kelas_wali) . '.' : 'Data siswa tidak ditemukan untuk kelas ini.' ?></td></tr>
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-slate-400 font-medium">
+                                    <?= $nama_kelas_wali !== ''
+                                        ? 'Belum ada siswa di kelas ' . htmlspecialchars($nama_kelas_wali) . '.'
+                                        : 'Data siswa tidak ditemukan untuk kelas ini.' ?>
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

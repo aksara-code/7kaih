@@ -81,21 +81,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Pengalihan Halaman Berdasarkan Role Pengguna
                 if ($role === 'guru') {
-                    $guru_id = $user['id'];
+                    $guruRole = strtolower((string) ($user['role'] ?? ''));
 
-                    // Cek apakah ID guru terdaftar di tabel kelas sebagai wali kelas
-                    $stmt_check = $pdo->prepare("SELECT id FROM kelas WHERE id_guru = :guru_id LIMIT 1");
-                    $stmt_check->execute(['guru_id' => $guru_id]);
-                    $is_wali_kelas = $stmt_check->fetch();
-
-                    if ($is_wali_kelas) {
-                        // Jika ID ditemukan di tabel kelas -> Wali Kelas
-                        $_SESSION['guru_role'] = 'wali-kelas';
-                        $dashboard = 'guru/dashboard.php';
-                    } else {
-                        // Jika ID TIDAK terdaftar di tabel kelas -> Tim 7 KAIH / Super User
+                    if ($guruRole === 'super-admin' || $guruRole === 'superuser' || $guruRole === 'admin') {
                         $_SESSION['guru_role'] = 'super-user';
                         $dashboard = 'admin/dashboard.php';
+                    } else {
+                        // Jika role tidak di set secara eksplisit, lakukan fallback ke pola lama
+                        // agar tetap kompatibel dengan data lama.
+                        $guru_id = $user['id'];
+                        $stmt_check = $pdo->prepare("SELECT id FROM kelas WHERE id_guru = :guru_id LIMIT 1");
+                        $stmt_check->execute(['guru_id' => $guru_id]);
+                        $is_wali_kelas = $stmt_check->fetch();
+
+                        if ($is_wali_kelas) {
+                            $_SESSION['guru_role'] = 'wali-kelas';
+                            $dashboard = 'guru/dashboard.php';
+                        } else {
+                            $_SESSION['guru_role'] = 'super-user';
+                            $dashboard = 'admin/dashboard.php';
+                        }
                     }
 
                     $_SESSION['username'] = $user['username'] ?? '';
@@ -105,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     unset($_SESSION['guru_role']);
                     unset($_SESSION['username']);
-                    
+
                     // Mengarahkan Siswa ke Dashboard Siswa
                     header("Location: dashboard.php");
                     exit();

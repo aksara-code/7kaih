@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Jakarta');
 require_once '../koneksi.php';
 
 if (
@@ -58,73 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $action = $_POST['action'] ?? '';
         try {
-            if ($action === 'add_student') {
-                $name = trim($_POST['nama'] ?? '');
-                $nisn = trim($_POST['nisn'] ?? '');
-                $password = $_POST['password'] ?? '';
-                if ($name === '' || $nisn === '' || !is_string($password) || strlen($password) < 6) {
-                    throw new RuntimeException('Nama, NISN, dan password minimal 6 karakter wajib diisi.');
-                }
-                $stmt = $pdo->prepare('INSERT INTO siswa (nama, nisn, password, id_kelas) VALUES (:nama, :nisn, :password, :id_kelas)');
-                $stmt->execute([
-                    'nama' => $name,
-                    'nisn' => $nisn,
-                    'password' => password_hash($password, PASSWORD_DEFAULT),
-                    'id_kelas' => $classId,
-                ]);
-                $message = 'Siswa berhasil ditambahkan ke kelas.';
-            } elseif ($action === 'assign_student') {
-                $studentId = filter_input(INPUT_POST, 'siswa_id', FILTER_VALIDATE_INT);
-                if (!$studentId || $studentId < 1) {
-                    throw new RuntimeException('Pilih siswa yang akan dimasukkan ke kelas.');
-                }
-                $stmt = $pdo->prepare('UPDATE siswa SET id_kelas = :kelas_id WHERE id = :siswa_id AND id_kelas IS NULL');
-                $stmt->execute(['kelas_id' => $classId, 'siswa_id' => $studentId]);
-                if ($stmt->rowCount() !== 1) {
-                    throw new RuntimeException('Siswa tidak ditemukan atau sudah berada di kelas lain.');
-                }
-                $message = 'Siswa berhasil dimasukkan ke kelas.';
-            } elseif ($action === 'update_student') {
-                $studentId = filter_input(INPUT_POST, 'siswa_id', FILTER_VALIDATE_INT);
-                $name = trim($_POST['nama'] ?? '');
-                $nisn = trim($_POST['nisn'] ?? '');
-                $password = $_POST['password'] ?? '';
-                if (!$studentId || $studentId < 1 || $name === '' || $nisn === '') {
-                    throw new RuntimeException('Nama dan NISN siswa wajib diisi.');
-                }
-                if (!is_string($password) || ($password !== '' && strlen($password) < 6)) {
-                    throw new RuntimeException('Password baru harus kosong atau minimal 6 karakter.');
-                }
-                if ($password !== '') {
-                    $stmt = $pdo->prepare('UPDATE siswa SET nama = :nama, nisn = :nisn, password = :password WHERE id = :id AND id_kelas = :kelas_id');
-                    $stmt->execute([
-                        'nama' => $name,
-                        'nisn' => $nisn,
-                        'password' => password_hash($password, PASSWORD_DEFAULT),
-                        'id' => $studentId,
-                        'kelas_id' => $classId,
-                    ]);
-                } else {
-                    $stmt = $pdo->prepare('UPDATE siswa SET nama = :nama, nisn = :nisn WHERE id = :id AND id_kelas = :kelas_id');
-                    $stmt->execute(['nama' => $name, 'nisn' => $nisn, 'id' => $studentId, 'kelas_id' => $classId]);
-                }
-                if ($stmt->rowCount() === 0) {
-                    $check = $pdo->prepare('SELECT id FROM siswa WHERE id = :id AND id_kelas = :kelas_id');
-                    $check->execute(['id' => $studentId, 'kelas_id' => $classId]);
-                    if (!$check->fetch()) {
-                        throw new RuntimeException('Siswa tidak ditemukan di kelas ini.');
-                    }
-                }
-                $message = 'Data siswa berhasil diperbarui.';
-            } elseif ($action === 'remove_student') {
-                $studentId = filter_input(INPUT_POST, 'siswa_id', FILTER_VALIDATE_INT);
-                $stmt = $pdo->prepare('UPDATE siswa SET id_kelas = NULL WHERE id = :id AND id_kelas = :kelas_id');
-                $stmt->execute(['id' => $studentId, 'kelas_id' => $classId]);
-                if ($stmt->rowCount() !== 1) {
-                    throw new RuntimeException('Siswa tidak ditemukan di kelas ini.');
-                }
-                $message = 'Siswa dilepas dari kelas. Akun dan riwayat kegiatannya tetap tersimpan.';
-            } elseif ($action === 'add_teacher') {
+            if ($action === 'add_teacher') {
                 $name = trim($_POST['nama'] ?? '');
                 $nip = trim($_POST['nip'] ?? '');
                 $username = trim($_POST['username'] ?? '');
@@ -219,8 +154,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $studentsQuery = $pdo->prepare('SELECT id, nama, nisn FROM siswa WHERE id_kelas = :id ORDER BY nama ASC');
 $studentsQuery->execute(['id' => $classId]);
 $students = $studentsQuery->fetchAll();
-$unassignedQuery = $pdo->query('SELECT id, nama, nisn FROM siswa WHERE id_kelas IS NULL ORDER BY nama ASC');
-$unassignedStudents = $unassignedQuery->fetchAll();
+$habitCategories = [
+    'bangun' => 'Bangun Pagi',
+    'ibadah' => 'Beribadah',
+    'belajar' => 'Gemar Belajar',
+    'makan' => 'Makan Sehat',
+    'olahraga' => 'Olahraga',
+    'bermasyarakat' => 'Bermasyarakat',
+    'tidur' => 'Tidur Cepat',
+];
+$classProgress = array_fill_keys(array_keys($habitCategories), 0);
+$studentProgress = [];
+$today = date('Y-m-d');
+$progressQuery = $pdo->prepare(
+    'SELECT la.id_siswa, la.kategori
+     FROM log_aktivitas la
+     INNER JOIN siswa s ON s.id = la.id_siswa
+     WHERE s.id_kelas = :id_kelas AND la.waktu_mulai >= :start_date AND la.waktu_mulai < :end_date
+     GROUP BY la.id_siswa, la.kategori'
+);
+$progressQuery->execute([
+    'id_kelas' => $classId,
+    'start_date' => $today . ' 00:00:00',
+    'end_date' => date('Y-m-d', strtotime($today . ' +1 day')) . ' 00:00:00',
+]);
+foreach ($progressQuery->fetchAll() as $activity) {
+    $category = $activity['kategori'];
+    if (!array_key_exists($category, $classProgress)) {
+        continue;
+    }
+    $classProgress[$category]++;
+    $studentProgress[(int) $activity['id_siswa']] = ($studentProgress[(int) $activity['id_siswa']] ?? 0) + 1;
+}
+$studentCount = count($students);
+$totalPossible = $studentCount * count($habitCategories);
+$totalCompleted = array_sum($classProgress);
+$progressPercent = $totalPossible > 0 ? (int) round(($totalCompleted / $totalPossible) * 100) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -229,6 +198,7 @@ $unassignedStudents = $unassignedQuery->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Kelas <?= escape($kelas['nama_kelas']) ?> — Tujuh Kebiasaan</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
@@ -309,76 +279,118 @@ $unassignedStudents = $unassignedQuery->fetchAll();
         </section>
 
         <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div>
-                    <h2 class="font-black text-lg text-slate-900">Siswa Kelas <?= escape($kelas['nama_kelas']) ?></h2>
-                    <p class="text-sm text-slate-500 mt-1"><?= count($students) ?> siswa terdaftar</p>
+                    <h2 class="font-black text-lg text-slate-900">Progres Kelas <?= escape($kelas['nama_kelas']) ?></h2>
+                    <p class="text-sm text-slate-500 mt-1">Rekap pengisian 7 kegiatan hari ini, <?= date('d-m-Y') ?>.</p>
+                </div>
+                <span class="text-sm font-extrabold text-emerald-800"><?= $totalCompleted ?> / <?= $totalPossible ?> kegiatan terisi</span>
+            </div>
+            <div class="mt-4 h-3 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label="Progres kegiatan kelas" aria-valuenow="<?= $progressPercent ?>" aria-valuemin="0" aria-valuemax="100">
+                <div class="h-full rounded-full bg-emerald-600 transition-all" style="width: <?= $progressPercent ?>%"></div>
+            </div>
+            <p class="mt-2 text-right text-xs font-bold text-slate-500"><?= $progressPercent ?>% dari target kelas</p>
+
+            <div class="mt-6 grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-8 items-center">
+                <div class="mx-auto w-full max-w-xs">
+                    <canvas id="classProgressChart" aria-label="Donut progres keseluruhan kelas"></canvas>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-extrabold text-sm text-slate-800 mb-3">Pengisian per kegiatan</h3>
+                    <canvas id="habitProgressChart" aria-label="Chart siswa yang sudah mengisi tiap kegiatan"></canvas>
                 </div>
             </div>
+        </section>
 
-            <div class="border-y border-slate-200 py-5 mb-5">
-                <h3 class="font-extrabold text-sm text-slate-800 mb-3">Tambah siswa baru</h3>
-                <form method="post" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-                    <input type="hidden" name="csrf_token" value="<?= escape($csrfToken) ?>">
-                    <input type="hidden" name="action" value="add_student">
-                    <label class="text-xs font-bold text-slate-600">Nama siswa
-                        <input name="nama" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    </label>
-                    <label class="text-xs font-bold text-slate-600">NISN
-                        <input name="nisn" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    </label>
-                    <label class="text-xs font-bold text-slate-600">Password (min. 6 karakter)
-                        <input name="password" type="password" minlength="6" required autocomplete="new-password" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    </label>
-                    <button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-user-plus mr-1"></i>Tambah siswa</button>
-                </form>
-                <?php if ($unassignedStudents): ?>
-                    <form method="post" class="mt-4 flex flex-col sm:flex-row gap-2">
-                        <input type="hidden" name="csrf_token" value="<?= escape($csrfToken) ?>">
-                        <input type="hidden" name="action" value="assign_student">
-                        <label for="siswa_id" class="sr-only">Pilih siswa yang belum memiliki kelas</label>
-                        <select id="siswa_id" name="siswa_id" required class="min-w-0 flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Masukkan siswa yang belum memiliki kelas</option>
-                            <?php foreach ($unassignedStudents as $student): ?>
-                                <option value="<?= (int) $student['id'] ?>"><?= escape($student['nama']) ?> · NISN <?= escape($student['nisn'] ?? '-') ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold">Masukkan ke kelas</button>
-                    </form>
-                <?php endif; ?>
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-200">
+                <h2 class="font-black text-lg text-slate-900">Siswa Kelas <?= escape($kelas['nama_kelas']) ?></h2>
+                <p class="text-sm text-slate-500 mt-1"><?= $studentCount ?> siswa terdaftar di database</p>
             </div>
-
-            <div class="space-y-3">
-                <?php foreach ($students as $student): ?>
-                    <article id="student-<?= (int) $student['id'] ?>" class="border border-slate-200 rounded-xl p-4 scroll-mt-6">
-                        <form method="post" class="grid sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
-                            <input type="hidden" name="csrf_token" value="<?= escape($csrfToken) ?>">
-                            <input type="hidden" name="action" value="update_student">
-                            <input type="hidden" name="siswa_id" value="<?= (int) $student['id'] ?>">
-                            <label class="text-xs font-bold text-slate-600">Nama
-                                <input name="nama" required value="<?= escape($student['nama']) ?>" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                            </label>
-                            <label class="text-xs font-bold text-slate-600">NISN
-                                <input name="nisn" required value="<?= escape($student['nisn'] ?? '') ?>" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                            </label>
-                            <label class="text-xs font-bold text-slate-600">Password baru (opsional)
-                                <input name="password" type="password" minlength="6" autocomplete="new-password" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                            </label>
-                            <button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i>Simpan</button>
-                        </form>
-                        <form method="post" class="mt-3" onsubmit="return confirm('Lepaskan siswa dari kelas? Akun dan seluruh riwayat aktivitas tetap tersimpan.');">
-                            <input type="hidden" name="csrf_token" value="<?= escape($csrfToken) ?>">
-                            <input type="hidden" name="action" value="remove_student">
-                            <input type="hidden" name="siswa_id" value="<?= (int) $student['id'] ?>">
-                            <button class="text-red-700 hover:text-red-900 text-xs font-bold"><i class="fa-solid fa-user-minus mr-1"></i>Hapus dari kelas</button>
-                        </form>
-                    </article>
-                <?php endforeach; ?>
-                <?php if (!$students): ?>
-                    <p class="py-8 text-center text-sm text-slate-500">Belum ada siswa di kelas ini.</p>
-                <?php endif; ?>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                        <tr>
+                            <th class="px-5 py-3">No</th>
+                            <th class="px-5 py-3">Nama Siswa</th>
+                            <th class="px-5 py-3">NISN</th>
+                            <th class="px-5 py-3">Progres Hari Ini</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <?php foreach ($students as $index => $student): ?>
+                            <?php $completed = $studentProgress[(int) $student['id']] ?? 0; ?>
+                            <tr>
+                                <td class="px-5 py-4 text-slate-400 font-bold"><?= $index + 1 ?></td>
+                                <td class="px-5 py-4 font-bold text-slate-900"><?= escape($student['nama']) ?></td>
+                                <td class="px-5 py-4 text-slate-600"><?= escape($student['nisn'] ?? '-') ?></td>
+                                <td class="px-5 py-4 min-w-48">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div class="h-full rounded-full bg-emerald-600" style="width: <?= (int) round(($completed / 7) * 100) ?>%"></div>
+                                        </div>
+                                        <span class="w-8 text-right text-xs font-extrabold text-slate-700"><?= $completed ?>/7</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php if (!$students): ?>
+                            <tr><td colspan="4" class="px-5 py-10 text-center text-sm text-slate-500">Belum ada siswa terdaftar di kelas ini.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </section>
     </main>
+    <script>
+        const habitLabels = <?= json_encode(array_values($habitCategories), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        const habitCounts = <?= json_encode(array_values($classProgress)) ?>;
+        const studentCount = <?= $studentCount ?>;
+        const totalCompleted = <?= $totalCompleted ?>;
+        const totalPossible = <?= $totalPossible ?>;
+
+        new Chart(document.getElementById('classProgressChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Terisi', 'Belum terisi'],
+                datasets: [{
+                    data: [totalCompleted, Math.max(totalPossible - totalCompleted, 0)],
+                    backgroundColor: ['#059669', '#e2e8f0'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                cutout: '72%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18 } },
+                    tooltip: { enabled: totalPossible > 0 }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('habitProgressChart'), {
+            type: 'bar',
+            data: {
+                labels: habitLabels,
+                datasets: [{
+                    label: 'Siswa mengisi',
+                    data: habitCounts,
+                    backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#f43f5e', '#f97316', '#14b8a6', '#6366f1'],
+                    borderRadius: 5,
+                    maxBarThickness: 28
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                scales: {
+                    x: { beginAtZero: true, max: Math.max(studentCount, 1), ticks: { precision: 0 }, grid: { color: '#e2e8f0' } },
+                    y: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <?php
 session_start();
 date_default_timezone_set('Asia/Jakarta');
-require_once 'koneksi.php';
+require_once '../koneksi.php';
 
 // 1. Cek Autentikasi Pengguna
 if (!isset($_SESSION['user_id'])) {
@@ -12,8 +12,8 @@ if (!isset($_SESSION['user_id'])) {
 $user_id   = $_SESSION['user_id'];
 $user_role = $_SESSION['role'] ?? 'siswa';
 $dashboardUrl = $user_role === 'guru'
-    ? (($_SESSION['guru_role'] ?? '') === 'super-user' ? 'admin/dashboard.php' : 'guru/dashboard.php')
-    : 'dashboard.php';
+    ? (($_SESSION['guru_role'] ?? '') === 'super-user' ? '../admin/dashboard.php' : 'dashboard.php')
+    : '../dashboard.php';
 
 // 2. Penentuan ID Siswa yang akan ditampilkan
 $siswa_id = null;

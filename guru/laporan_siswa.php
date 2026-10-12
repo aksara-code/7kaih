@@ -255,8 +255,8 @@ if ($siswa) {
                     <!-- Foto Siswa -->
                     <div class="flex shrink-0 items-center justify-center text-center">
                         <div class="w-24 h-24 sm:w-36 sm:h-36 rounded-2xl bg-white border-4 border-emerald-700/20 overflow-hidden shadow-sm flex items-center justify-center relative">
-                            <?php if (!empty($siswa['foto']) && file_exists('uploads/' . $siswa['foto'])): ?>
-                                <img src="uploads/<?= htmlspecialchars($siswa['foto']) ?>" alt="Foto Profil" class="w-full h-full object-cover">
+                            <?php if (!empty($siswa['foto']) && is_file(__DIR__ . '/../uploads/' . basename($siswa['foto']))): ?>
+                                <img src="../uploads/<?= rawurlencode(basename($siswa['foto'])) ?>" alt="Foto Profil" class="w-full h-full object-cover">
                             <?php else: ?>
                                 <div class="text-slate-400 flex flex-col items-center">
                                     <i class="fa-solid fa-user-astronaut text-5xl mb-1 text-emerald-700/40"></i>

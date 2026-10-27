@@ -147,7 +147,7 @@ try {
             <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between">
                 <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
                 
                 <!-- Tombol + Baru -->

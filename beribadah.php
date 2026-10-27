@@ -67,6 +67,7 @@
         </div>
     </div>
 
+    <!-- Modal Tambah Kegiatan -->
     <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-3">
         <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-3 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
             <div class="mb-3 flex items-center justify-between gap-3">
@@ -75,34 +76,69 @@
             </div>
 
             <form id="activityForm" class="space-y-3">
+                <!-- Pilihan Kategori Agama / Keyakinan -->
                 <div>
-                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
+                    <label class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Kategori Ibadah</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="tabIslam" class="rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-xs font-extrabold text-emerald-800 transition">
+                            <i class="fa-solid fa-moon mr-1"></i> Islam (Sholat)
+                        </button>
+                        <button type="button" id="tabNonIslam" class="rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 transition hover:border-slate-300">
+                            <i class="fa-solid fa-church mr-1"></i> Non-Islam (Ibadah)
+                        </button>
+                    </div>
+                </div>
 
-                    <div id="prayerChoiceWrapper" class="space-y-2">
-                        <div class="space-y-2">
-                            <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
-                                <span class="block">Sholat</span>
-                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
-                            </button>
+                <!-- Bagian Ibadah Islam (Sholat) dengan Tampilan & Logika Asal -->
+                <div id="islamSection" class="space-y-3">
+                    <div>
+                        <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Sholat</label>
 
-                            <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
-                                <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                        <div id="prayerChoiceWrapper" class="space-y-2">
+                            <div class="space-y-2">
+                                <button type="button" data-group="siang" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                                    <span class="block">Sholat</span>
+                                    <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Zuhur / Ashar</span>
+                                </button>
+
+                                <div id="siangPrayerOptions" class="hidden grid grid-cols-2 gap-2">
+                                    <button type="button" data-option="Sholat Dzuhur" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Dzuhur</button>
+                                    <button type="button" data-option="Sholat Ashar" class="option-btn rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">Sholat Ashar</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                                    <span class="block">Sholat</span>
+                                    <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
+                                </button>
+
+                                <div id="triggeredPrayerOptions" class="hidden grid grid-cols-3 gap-2">
+                                    <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
+                                    <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
+                                    <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="space-y-2">
-                            <button type="button" data-group="triggered" class="prayer-group-btn w-full rounded-[14px] border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
-                                <span class="block">Sholat</span>
-                                <span class="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Subuh / Maghrib / Isya</span>
-                            </button>
-
-                            <div id="triggeredPrayerOptions" class="hidden grid grid-cols-2 gap-2">
-                                <button type="button" data-option="Sholat Subuh" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Subuh</button>
-                                <button type="button" data-option="Sholat Maghrib" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Maghrib</button>
-                                <button type="button" data-option="Sholat Isya" class="trigger-option rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 transition opacity-60">Sholat Isya</button>
-                            </div>
-                        </div>
+                <!-- Bagian Ibadah Non-Islam -->
+                <div id="nonIslamSection" class="hidden space-y-2">
+                    <label class="mb-1 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Pilih Kegiatan Ibadah</label>
+                    <div class="space-y-2">
+                        <button type="button" data-option="Ibadah / Doa Harian" class="non-islam-btn w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <span class="block font-extrabold">Ibadah / Doa Harian</span>
+                            <span class="block text-[10px] text-slate-500 font-normal">Doa pagi, malam, atau meditasi</span>
+                        </button>
+                        <button type="button" data-option="Ibadah Mingguan / Kebaktian" class="non-islam-btn w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <span class="block font-extrabold">Ibadah Mingguan / Kebaktian</span>
+                            <span class="block text-[10px] text-slate-500 font-normal">Ibadah rutin mingguan di tempat ibadah masing-masing</span>
+                        </button>
+                        <button type="button" data-option="Sembahyang / Puja Bakti" class="non-islam-btn w-full rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-bold text-slate-700 transition hover:border-[#0d6b4e] hover:bg-emerald-50">
+                            <span class="block font-extrabold">Sembahyang / Puja Bakti</span>
+                            <span class="block text-[10px] text-slate-500 font-normal">Sembahyang atau puja bakti rutin</span>
+                        </button>
                     </div>
                 </div>
 
@@ -148,14 +184,23 @@
         const activityForm = document.getElementById('activityForm');
         const imageInput = document.getElementById('imageInput');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
+        
         const optionButtons = document.querySelectorAll('.option-btn');
+        const nonIslamButtons = document.querySelectorAll('.non-islam-btn');
         const prayerGroupButtons = document.querySelectorAll('.prayer-group-btn');
         const prayerChoiceWrapper = document.getElementById('prayerChoiceWrapper');
         const siangPrayerOptions = document.getElementById('siangPrayerOptions');
         const triggeredPrayerOptions = document.getElementById('triggeredPrayerOptions');
+        
+        const tabIslam = document.getElementById('tabIslam');
+        const tabNonIslam = document.getElementById('tabNonIslam');
+        const islamSection = document.getElementById('islamSection');
+        const nonIslamSection = document.getElementById('nonIslamSection');
+
         let currentPage = 1;
         let activityItems = [];
         let successNotificationTimer = null;
+        let activeCategoryTab = 'islam'; // 'islam' atau 'non-islam'
 
         function setAutoDateTime() {
             const now = new Date();
@@ -181,7 +226,6 @@
                 item.classList.toggle('bg-emerald-100', isSelected);
                 item.classList.toggle('border-emerald-500', isSelected);
                 item.classList.toggle('text-emerald-700', isSelected);
-                item.classList.toggle('opacity-60', !isSelected && item.classList.contains('trigger-option'));
             });
 
             document.querySelectorAll('.trigger-option').forEach(button => {
@@ -200,7 +244,6 @@
             const hasTriggeredPrayer = Boolean(activeTriggeredPrayer);
 
             prayerChoiceWrapper.classList.remove('hidden');
-
             siangPrayerOptions.classList.add('hidden');
             triggeredPrayerOptions.classList.add('hidden');
 
@@ -210,39 +253,52 @@
             }
         }
 
-        function openModal() {
-            addModal.classList.remove('hidden');
-            addModal.classList.add('flex');
-            refreshPrayerButtons();
-        }
+        // Fungsi Validasi Rentang Jam Waktu Sholat Secara Aktual Saat Submit
+        function isPrayerTimeValid(prayerName) {
+            const now = new Date();
+            const minutesNow = now.getHours() * 60 + now.getMinutes();
 
-        function closeModal() {
-            addModal.classList.add('hidden');
-            addModal.classList.remove('flex');
-        }
-
-        function formatDate(value) {
-            const date = new Date(value + 'T00:00:00');
-            return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
-        }
-
-        function handleImageSelect() {
-            const file = imageInput.files && imageInput.files[0];
-            if (!file) {
-                fileNameDisplay.textContent = 'No file chosen';
-                fileNameDisplay.classList.add('text-slate-400');
-                fileNameDisplay.classList.remove('text-slate-700');
-                return;
+            switch (prayerName) {
+                case 'Sholat Subuh':
+                    // Rentang Jam Subuh: 04:00 (240 min) s.d. 06:00 (360 min)
+                    return minutesNow >= 240 && minutesNow < 360;
+                case 'Sholat Dzuhur':
+                    // Rentang Jam Dzuhur: 11:30 (690 min) s.d. 15:00 (900 min)
+                    return minutesNow >= 690 && minutesNow < 900;
+                case 'Sholat Ashar':
+                    // Rentang Jam Ashar: 15:00 (900 min) s.d. 18:00 (1080 min)
+                    return minutesNow >= 900 && minutesNow < 1080;
+                case 'Sholat Maghrib':
+                    // Rentang Jam Maghrib: 17:30 (1050 min) s.d. 19:15 (1155 min)
+                    return minutesNow >= 1050 && minutesNow < 1155;
+                case 'Sholat Isya':
+                    // Rentang Jam Isya: 19:00 (1140 min) s.d. 23:59 atau dini hari 00:00 s.d. 04:00 (240 min)
+                    return minutesNow >= 1140 || minutesNow < 240;
+                default:
+                    return true;
             }
-
-            fileNameDisplay.textContent = file.name;
-            fileNameDisplay.classList.remove('text-slate-400');
-            fileNameDisplay.classList.add('text-slate-700');
         }
+
+        // Tab Switching Handler
+        tabIslam.addEventListener('click', () => {
+            activeCategoryTab = 'islam';
+            tabIslam.className = "rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-xs font-extrabold text-emerald-800 transition";
+            tabNonIslam.className = "rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 transition hover:border-slate-300";
+            islamSection.classList.remove('hidden');
+            nonIslamSection.classList.add('hidden');
+            refreshPrayerButtons();
+        });
+
+        tabNonIslam.addEventListener('click', () => {
+            activeCategoryTab = 'non-islam';
+            tabNonIslam.className = "rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-xs font-extrabold text-emerald-800 transition";
+            tabIslam.className = "rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 transition hover:border-slate-300";
+            nonIslamSection.classList.remove('hidden');
+            islamSection.classList.add('hidden');
+            
+            const firstBtn = nonIslamSection.querySelector('.non-islam-btn');
+            if (firstBtn) firstBtn.click();
+        });
 
         prayerGroupButtons.forEach(groupButton => {
             groupButton.addEventListener('click', function () {
@@ -292,10 +348,50 @@
             });
         });
 
+        nonIslamButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                nonIslamButtons.forEach(item => {
+                    item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700', 'border-2');
+                    item.classList.add('border', 'border-slate-200', 'bg-slate-50');
+                });
+                button.classList.remove('border-slate-200', 'bg-slate-50');
+                button.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-700', 'border-2');
+            });
+        });
+
+        function openModal() {
+            addModal.classList.remove('hidden');
+            addModal.classList.add('flex');
+            tabIslam.click();
+        }
+
+        function closeModal() {
+            addModal.classList.add('hidden');
+            addModal.classList.remove('flex');
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+        }
+
+        function handleImageSelect() {
+            const file = imageInput.files && imageInput.files[0];
+            if (!file) {
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.classList.add('text-slate-400');
+                fileNameDisplay.classList.remove('text-slate-700');
+                return;
+            }
+
+            fileNameDisplay.textContent = file.name;
+            fileNameDisplay.classList.remove('text-slate-400');
+            fileNameDisplay.classList.add('text-slate-700');
+        }
+
         imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
-            if (totalItems < ITEMS_PER_PAGE) {
+            if (totalItems <= ITEMS_PER_PAGE) {
                 pager.innerHTML = '';
                 return;
             }
@@ -349,29 +445,32 @@
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
-            historyList.innerHTML = pageItems.map(item => `
-                <div class="rounded-[22px] border border-[#ebf3ee] bg-[#f9fbfa] p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-                    <div class="flex items-start gap-3">
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
-                                <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                <span class="text-slate-400">•</span>
-                                <span class="font-extrabold text-slate-700">${item.time}</span>
+            historyList.innerHTML = pageItems.map(item => {
+                const isInvalidTime = item.option && item.option.includes('Tidak Sesuai Jam');
+                return `
+                    <div class="rounded-[22px] border ${isInvalidTime ? 'border-amber-200 bg-amber-50/50' : 'border-[#ebf3ee] bg-[#f9fbfa]'} p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                        <div class="flex items-start gap-3">
+                            <div class="min-w-0 flex-1 space-y-2">
+                                <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf9f0] text-[#0c6d4d]">📅</span>
+                                    <span>${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                    <span class="text-slate-400">•</span>
+                                    <span class="font-extrabold text-slate-700">${item.time || '00:00'}</span>
+                                </div>
+
+                                <p class="text-sm font-extrabold ${isInvalidTime ? 'text-amber-800' : 'text-slate-800'}">${escapeHtml(item.option || 'Ibadah')}</p>
+                                <p class="text-[11px] leading-relaxed ${isInvalidTime ? 'text-amber-700 font-medium' : 'text-slate-600'}">
+                                    ${isInvalidTime ? '⚠️ Waktu pengisian di luar jam sholat (tidak masuk hitungan progres valid).' : (item.note ? escapeHtml(item.note) : `Pelaksanaan ${escapeHtml(item.option || 'ibadah')} sesuai jadwal.`)}
+                                </p>
                             </div>
 
-                            <p class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Ibadah')}</p>
-                            <p class="text-[11px] leading-relaxed text-slate-600">
-                                ${item.note ? escapeHtml(item.note) : `Pelaksanaan ${escapeHtml(item.option || 'ibadah')} sesuai jadwal.`}
-                            </p>
-                        </div>
-
-                        <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
-                            ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan ibadah" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">🕌</div>'}
+                            <div class="w-28 shrink-0 overflow-hidden rounded-[12px] border border-emerald-100 bg-white">
+                                ${item.image ? `<img src="${item.image}" class="h-24 w-full object-cover" alt="Foto kegiatan ibadah" />` : '<div class="flex h-24 w-full items-center justify-center bg-[#edf9f0] text-2xl text-slate-400">🕌</div>'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             renderPager(items.length);
         }
@@ -379,13 +478,30 @@
         activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
-            const selectedPrayer = document.querySelector('.bg-emerald-100[data-option]')?.dataset.option || getActiveTriggeredPrayer() || 'Sholat Dzuhur';
+            let chosenOption = '';
+
+            if (activeCategoryTab === 'islam') {
+                const selectedPrayer = document.querySelector('.bg-emerald-100[data-option]')?.dataset.option || getActiveTriggeredPrayer() || 'Sholat Dzuhur';
+                
+                // Lakukan validasi jam sholat secara otomatis
+                const isValidTime = isPrayerTimeValid(selectedPrayer);
+                if (!isValidTime) {
+                    chosenOption = `${selectedPrayer} (Tidak Sesuai Jam)`;
+                } else {
+                    chosenOption = selectedPrayer;
+                }
+            } else {
+                chosenOption = document.querySelector('.non-islam-btn.bg-emerald-100')?.dataset.option || 'Ibadah / Doa Harian';
+            }
+
             const file = imageInput.files && imageInput.files[0];
             const timestamp = setAutoDateTime();
+
             try {
                 await ActivityDB.save(CATEGORY, {
                     date: timestamp.date,
-                    option: selectedPrayer,
+                    time: timestamp.time,
+                    option: chosenOption,
                     note: '',
                     image: file || null
                 });
@@ -395,8 +511,12 @@
                 fileNameDisplay.textContent = 'No file chosen';
                 fileNameDisplay.classList.add('text-slate-400');
                 fileNameDisplay.classList.remove('text-slate-700');
-                optionButtons.forEach(item => item.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-700'));
                 closeModal();
+
+                if (activeCategoryTab === 'islam' && chosenOption.includes('Tidak Sesuai Jam')) {
+                    alert('Perhatian: Waktu pengisian sholat tidak sesuai dengan rentang jamnya, sehingga data dicatat sebagai "tidak sesuai dengan jam" dan tidak masuk ke dalam progres valid.');
+                }
+
                 successNotification.classList.remove('hidden');
                 clearTimeout(successNotificationTimer);
                 successNotificationTimer = setTimeout(() => {

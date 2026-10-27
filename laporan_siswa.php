@@ -46,7 +46,47 @@ if ($siswa_id) {
     $siswa = $stmt->fetch();
 }
 
-// 5. Rekap pengisian kebiasaan siswa pada bulan berjalan
+// 5. Pengaturan Filter Bulan
+$daftar_nama_bulan = [
+    1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+
+// Ambil bulan dari parameter GET (format: YYYY-MM), default ke bulan berjalan saat ini
+$selected_bulan = $_GET['bulan'] ?? date('Y-m');
+if (!preg_match('/^\d{4}-\d{2}$/', $selected_bulan)) {
+    $selected_bulan = date('Y-m');
+}
+
+list($tahun_pilih, $bulan_pilih) = explode('-', $selected_bulan);
+$tahun_pilih = (int) $tahun_pilih;
+$bulan_pilih = (int) $bulan_pilih;
+
+// Menentukan rentang tanggal awal dan akhir bulan yang dipilih
+$awal_bulan = sprintf('%04d-%02d-01 00:00:00', $tahun_pilih, $bulan_pilih);
+$jumlah_hari_dalam_bulan = (int) date('t', strtotime($awal_bulan));
+
+$is_current_month = ($selected_bulan === date('Y-m'));
+if ($is_current_month) {
+    $akhir_bulan = date('Y-m-d H:i:s');
+    $hari_berjalan = (int) date('j');
+} else {
+    $akhir_bulan = sprintf('%04d-%02d-%02d 23:59:59', $tahun_pilih, $bulan_pilih, $jumlah_hari_dalam_bulan);
+    $hari_berjalan = $jumlah_hari_dalam_bulan;
+}
+
+$tanggal_laporan = $daftar_nama_bulan[$bulan_pilih] . ' ' . $tahun_pilih;
+
+// Generate Opsi Pilihan Bulan (Misalnya 6 bulan ke belakang)
+$opsi_bulan = [];
+for ($i = 0; $i < 6; $i++) {
+    $time = strtotime("-$i months");
+    $val = date('Y-m', $time);
+    $label = $daftar_nama_bulan[(int)date('n', $time)] . ' ' . date('Y', $time);
+    $opsi_bulan[$val] = $label;
+}
+
+// 6. Rekap pengisian kebiasaan siswa berdasarkan bulan yang dipilih
 $kategori_kebiasaan = [
     [
         'kode' => 'bangun',
@@ -93,28 +133,11 @@ $kategori_kebiasaan = [
 ];
 
 $daftar_kebiasaan = [];
-$hari_berjalan = (int) date('j');
-$jumlah_hari_dalam_bulan = (int) date('t');
-$daftar_nama_bulan = [
-    1 => 'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember',
-];
-$tanggal_laporan = $hari_berjalan . ' ' . $daftar_nama_bulan[(int) date('n')] . ' ' . date('Y');
-$awal_bulan = date('Y-m-01 00:00:00');
-$waktu_sekarang = date('Y-m-d H:i:s');
 
 if ($siswa) {
     $placeholders_kategori = implode(', ', array_fill(0, count($kategori_kebiasaan), '?'));
+    
+    // Filter ibadah yang "Tidak Sesuai Jam" tidak dihitung ke dalam rekap progress valid
     $stmt_rekap = $pdo->prepare(
         "SELECT kategori, COUNT(DISTINCT DATE(waktu_mulai)) AS total
          FROM log_aktivitas
@@ -122,12 +145,13 @@ if ($siswa) {
            AND kategori IN ($placeholders_kategori)
            AND waktu_mulai >= ?
            AND waktu_mulai <= ?
+           AND (kategori != 'ibadah' OR deskripsi NOT LIKE '%Tidak Sesuai Jam%')
          GROUP BY kategori"
     );
     $stmt_rekap->execute(array_merge(
         [(int) $siswa_id],
         array_column($kategori_kebiasaan, 'kode'),
-        [$awal_bulan, $waktu_sekarang]
+        [$awal_bulan, $akhir_bulan]
     ));
 
     $total_per_kategori = array_fill_keys(array_column($kategori_kebiasaan, 'kode'), 0);
@@ -216,28 +240,32 @@ if ($siswa) {
 
     <main class="max-w-5xl mx-auto px-4 mt-6 w-full mb-auto">
 
-        <!-- Selector Siswa untuk Guru (Tidak ikut tercetak) -->
-        <?php if ($user_role === 'guru' && !empty($daftar_siswa)): ?>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <label for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-users text-emerald-700"></i> Pilih Siswa:
-                </label>
-                <select id="select_siswa" onchange="location = this.value;" class="w-full sm:w-80 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
-                    <?php foreach ($daftar_siswa as $ds): ?>
-                        <option value="laporan_siswa.php?id=<?= $ds['id'] ?>" <?= ($ds['id'] == $siswa_id) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($ds['nama']) ?> (NISN: <?= htmlspecialchars($ds['nisn'] ?? '-') ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        <?php endif; ?>
+        <!-- Selector Guru & Filter Bulan (Tidak ikut tercetak) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 no-print flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            
+            <!-- Jika Guru, Tampilkan Dropdown Pilih Siswa -->
+            <?php if ($user_role === 'guru' && !empty($daftar_siswa)): ?>
+                <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <label for="select_siswa" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-users text-emerald-700"></i> Siswa:
+                    </label>
+                    <select id="select_siswa" onchange="location = this.value;" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
+                        <?php foreach ($daftar_siswa as $ds): ?>
+                            <option value="laporan_siswa.php?id=<?= $ds['id'] ?>&bulan=<?= $selected_bulan ?>" <?= ($ds['id'] == $siswa_id) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($ds['nama']) ?> (NISN: <?= htmlspecialchars($ds['nisn'] ?? '-') ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            <?php endif; ?>
+
 
         <?php if ($siswa): ?>
             <!-- Kartu Laporan Cetak Utama -->
             <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200 print-shadow-none">
                 
                 <!-- Kop Laporan -->
-                <div class="border-b-2 border-emerald-800 pb-6 mb-8 flex items-center justify-between gap-4">
+                <div class="border-b-2 border-emerald-800 pb-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-800 text-white flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-seedling text-3xl"></i>
@@ -245,8 +273,11 @@ if ($siswa) {
                         <div>
                             <h2 class="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight">Laporan Rekapitulasi</h2>
                             <p class="text-xs sm:text-sm font-semibold text-emerald-700">Tujuh Kebiasaan Anak Indonesia Hebat</p>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Tanggal Cetak: <?= htmlspecialchars($tanggal_laporan) ?>, <?= date('H:i') ?> WIB</p>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">Periode Bulan: <span class="font-bold text-slate-700"><?= htmlspecialchars($tanggal_laporan) ?></span></p>
                         </div>
+                    </div>
+                    <div class="text-right sm:text-right text-xs text-slate-400">
+                        <span>Dicetak pada: <?= date('d/m/Y H:i') ?> WIB</span>
                     </div>
                 </div>
 
@@ -282,7 +313,22 @@ if ($siswa) {
                     </div>
                 </div>
 
-                <!-- Section Ringkasan 7 Kebiasaan Siswa (Desain Bersih & Tidak Menumpuk) -->
+                <!-- Dropdown Filter Bulan (Untuk Siswa dan Guru) -->
+                <div class="no-print mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                    <label for="select_bulan" class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-emerald-700"></i>
+                        <span>Periode Bulan</span>
+                    </label>
+                    <select id="select_bulan" onchange="location = this.value;" class="w-full sm:w-64 bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100">
+                        <?php foreach ($opsi_bulan as $val => $label): ?>
+                            <option value="laporan_siswa.php?id=<?= $siswa_id ?>&bulan=<?= $val ?>" <?= ($val === $selected_bulan) ? 'selected' : '' ?>>
+                                <?= $label ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Section Ringkasan 7 Kebiasaan Siswa -->
                 <div class="space-y-4">
                     <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
                         <h3 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">

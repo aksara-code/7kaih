@@ -1,3 +1,21 @@
+<?php
+session_start();
+date_default_timezone_set('Asia/Jakarta');
+require_once 'koneksi.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$user_id   = $_SESSION['user_id'];
+$user_role = $_SESSION['role'] ?? 'siswa';
+
+$siswa_id = $user_id;
+if ($user_role === 'guru' && isset($_GET['id'])) {
+    $siswa_id = intval($_GET['id']);
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -32,7 +50,7 @@
         <div class="relative z-10 mx-auto max-w-md px-5">
             <!-- Navigation & Action Bar -->
             <div class="mb-6 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
+                <a href="<?= ($user_role === 'guru') ? 'dashboard.php' : 'dashboard.php' ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
@@ -148,6 +166,8 @@
     <script>
         const CATEGORY = 'tidur';
         const ITEMS_PER_PAGE = 5;
+        const CURRENT_SISWA_ID = <?= $siswa_id ?>;
+        const USER_ROLE = "<?= $user_role ?>";
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
@@ -173,6 +193,12 @@
         let cameraStream = null;
         let faceDetectionTimer = null;
         let faceDetected = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (USER_ROLE === 'guru') {
+                if (openAddModalBtn) openAddModalBtn.style.display = 'none';
+            }
+        });
 
         function setAutoDateTime() {
             const now = new Date();
@@ -381,12 +407,12 @@
         }
 
         function renderPager(totalItems) {
-            if (totalItems < ITEMS_PER_PAGE) {
+            if (totalItems <= ITEMS_PER_PAGE) {
                 pager.innerHTML = '';
                 return;
             }
 
-            const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
             if (currentPage > totalPages) currentPage = totalPages;
 
             pager.innerHTML = `
@@ -441,31 +467,34 @@
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
-            historyList.innerHTML = pageItems.map(item => `
-                <div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-emerald-200 hover:bg-white hover:shadow-md">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2 mb-1.5">
-                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                                    📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </span>
-                                <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                    ⏰ ${item.time}
-                                </span>
+            historyList.innerHTML = pageItems.map(item => {
+                const isLate = item.option && item.option.includes('Terlambat');
+                return `
+                    <div class="group relative overflow-hidden rounded-2xl border ${isLate ? 'border-amber-200 bg-amber-50/50' : 'border-slate-100 bg-slate-50/60'} p-3.5 transition hover:shadow-md">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                                        📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </span>
+                                    <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                        ⏰ ${item.time}
+                                    </span>
+                                </div>
+
+                                <h4 class="text-sm font-extrabold ${isLate ? 'text-amber-800' : 'text-slate-800'}">${escapeHtml(item.option || 'Tidur cepat')}</h4>
+                                <p class="mt-0.5 text-xs ${isLate ? 'text-amber-700 font-medium' : 'text-slate-500'}">
+                                    ${isLate ? '⚠️ Waktu pengisian di luar rentang jam tidur cepat. ' : (item.note ? escapeHtml(item.note) : 'Catatan verifikasi tidur tepat waktu.')}
+                                </p>
                             </div>
 
-                            <h4 class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Tidur cepat')}</h4>
-                            <p class="mt-0.5 text-xs text-slate-500 line-clamp-2">
-                                ${item.note ? escapeHtml(item.note) : 'Catatan verifikasi tidur tepat waktu.'}
-                            </p>
-                        </div>
-
-                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
-                            ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto verifikasi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">🌙</div>'}
+                            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
+                                ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto verifikasi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">🌙</div>'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             renderPager(items.length);
         }
@@ -480,14 +509,32 @@
                 return;
             }
 
+            // Validasi Rentang Waktu Tidur Cepat: Antara pukul 21:00 (9 malam) s.d. 22:00 (10 malam)
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const totalMinutesNow = currentHour * 60 + currentMinute;
+            
+            // Rentang valid: Jam 21:00 (1260 menit) sampai 22:00 (1320 menit)
+            const startMinutes = 21 * 60; // 1260
+            const endMinutes = 22 * 60;   // 1320
+            
+            const isValidTime = totalMinutesNow >= startMinutes && totalMinutesNow <= endMinutes;
+            
+            let optionText = 'Tidur Cepat';
+            if (!isValidTime) {
+                optionText = 'Tidur Cepat (Terlambat)';
+            }
+
             const timestamp = setAutoDateTime();
             try {
                 await ActivityDB.save(CATEGORY, {
                     date: timestamp.date,
-                    option: 'Tidur cepat',
+                    option: optionText,
                     note: '',
                     image: photo
-                });
+                }, CURRENT_SISWA_ID);
+
                 currentPage = 1;
                 await loadHistory();
                 activityForm.reset();
@@ -495,6 +542,11 @@
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
+
+                if (!isValidTime) {
+                    alert('Wah, waktu pengisianmu tidak sesuai. Besok-besok usahakan tidur tepat ya!');
+                }
+
                 successNotification.classList.remove('hidden');
                 clearTimeout(successNotificationTimer);
                 successNotificationTimer = setTimeout(() => {
@@ -519,7 +571,7 @@
 
         async function loadHistory() {
             try {
-                activityItems = await ActivityDB.list(CATEGORY);
+                activityItems = await ActivityDB.list(CATEGORY, CURRENT_SISWA_ID);
                 renderHistory();
             } catch (error) {
                 historyList.textContent = error.message;

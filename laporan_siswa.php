@@ -135,28 +135,89 @@ $kategori_kebiasaan = [
 $daftar_kebiasaan = [];
 
 if ($siswa) {
-    $placeholders_kategori = implode(', ', array_fill(0, count($kategori_kebiasaan), '?'));
-    
-    // Filter ibadah yang "Tidak Sesuai Jam" tidak dihitung ke dalam rekap progress valid
-    $stmt_rekap = $pdo->prepare(
-        "SELECT kategori, COUNT(DISTINCT DATE(waktu_mulai)) AS total
-         FROM log_aktivitas
-         WHERE id_siswa = ?
-           AND kategori IN ($placeholders_kategori)
-           AND waktu_mulai >= ?
-           AND waktu_mulai <= ?
-           AND (kategori != 'ibadah' OR deskripsi NOT LIKE '%Tidak Sesuai Jam%')
-         GROUP BY kategori"
-    );
-    $stmt_rekap->execute(array_merge(
-        [(int) $siswa_id],
-        array_column($kategori_kebiasaan, 'kode'),
-        [$awal_bulan, $akhir_bulan]
-    ));
-
     $total_per_kategori = array_fill_keys(array_column($kategori_kebiasaan, 'kode'), 0);
-    foreach ($stmt_rekap->fetchAll() as $rekap) {
-        $total_per_kategori[$rekap['kategori']] = (int) $rekap['total'];
+
+    foreach ($kategori_kebiasaan as $kb) {
+        $kode_Cari = $kb['kode'];
+        
+        if ($kode_Cari === 'bangun' || $kode_Cari === 'tidur') {
+            // 1. BANGUN PAGI & TIDUR CEPAT: Dihitung per hari (unik 1 kali per hari)
+            $stmt_rekap = $pdo->prepare(
+                "SELECT COUNT(DISTINCT DATE(waktu_mulai)) AS total
+                 FROM log_aktivitas
+                 WHERE id_siswa = ?
+                   AND (kategori = ? OR kategori LIKE ?)
+                   AND waktu_mulai >= ?
+                   AND waktu_mulai <= ?"
+            );
+            $pattern_kategori = "%" . $kode_Cari . "%";
+            $stmt_rekap->execute([(int) $siswa_id, $kode_Cari, $pattern_kategori, $awal_bulan, $akhir_bulan]);
+            
+        } elseif ($kode_Cari === 'ibadah') {
+            // 2. IBADAH: Dihitung per hari unik, dan mengecualikan yang "Tidak Sesuai Jam"
+            $stmt_rekap = $pdo->prepare(
+                "SELECT COUNT(DISTINCT DATE(waktu_mulai)) AS total
+                 FROM log_aktivitas
+                 WHERE id_siswa = ?
+                   AND (kategori = ? OR kategori LIKE ?)
+                   AND waktu_mulai >= ?
+                   AND waktu_mulai <= ?
+                   AND deskripsi NOT LIKE '%Tidak Sesuai Jam%'"
+            );
+            $pattern_kategori = "%" . $kode_Cari . "%";
+            $stmt_rekap->execute([(int) $siswa_id, $kode_Cari, $pattern_kategori, $awal_bulan, $akhir_bulan]);
+            
+        } else {
+            // 3. MAKAN, OLAHRAGA, BERMASYARAKAT, BELAJAR: Dihitung akumulatif per kegiatan masuk meskipun berulang di hari yang sama
+            $stmt_rekap = $pdo->prepare(
+                "SELECT COUNT(*) AS total
+                 FROM log_aktivitas
+                 WHERE id_siswa = ?
+                   AND (kategori = ? OR kategori LIKE ?)
+                   AND waktu_mulai >= ?
+                   AND waktu_mulai <= ?"
+            );
+            $pattern_kategori = "%" . $kode_Cari . "%";
+            $stmt_rekap->execute([(int) $siswa_id, $kode_Cari, $pattern_kategori, $awal_bulan, $akhir_bulan]);
+        }
+        
+        $res = $stmt_rekap->fetch();
+        if ($res) {
+            $total_per_kategori[$kode_Cari] = (int) $res['total'];
+        }
+    }
+
+    // B. CEK STATUS TERAKHIR: Hanya untuk menentukan teks peringatan kuning (apakah aktivitas terakhirnya terlambat/kesiangan)
+    $stmt_terlambat = $pdo->prepare(
+        "SELECT kategori, deskripsi 
+         FROM log_aktivitas 
+         WHERE id_siswa = ? 
+           AND (kategori IN ('bangun', 'tidur') OR kategori LIKE '%bangun%' OR kategori LIKE '%tidur%')
+           AND waktu_mulai >= ? 
+           AND waktu_mulai <= ? 
+         ORDER BY waktu_mulai DESC, id DESC"
+    );
+    $stmt_terlambat->execute([(int) $siswa_id, $awal_bulan, $akhir_bulan]);
+    
+    $status_terlambat_terakhir = [];
+    foreach ($stmt_terlambat->fetchAll() as $row) {
+        $kat_lower = strtolower($row['kategori']);
+        $desc_lower = strtolower($row['deskripsi']);
+
+        if ((strpos($kat_lower, 'bangun') !== false) && !isset($status_terlambat_terakhir['bangun'])) {
+            if (strpos($desc_lower, 'kesiangan') !== false || strpos($desc_lower, 'terlambat') !== false) {
+                $status_terlambat_terakhir['bangun'] = true;
+            } else {
+                $status_terlambat_terakhir['bangun'] = false;
+            }
+        }
+        if ((strpos($kat_lower, 'tidur') !== false) && !isset($status_terlambat_terakhir['tidur'])) {
+            if (strpos($desc_lower, 'terlambat') !== false) {
+                $status_terlambat_terakhir['tidur'] = true;
+            } else {
+                $status_terlambat_terakhir['tidur'] = false;
+            }
+        }
     }
 
     foreach ($kategori_kebiasaan as $kebiasaan) {
@@ -173,10 +234,19 @@ if ($siswa) {
             $status = 'Perlu Ditingkatkan';
         }
 
+        // Keterangan kuning hanya muncul jika entri paling akhir berstatus terlambat/kesiangan
+        $keterangan_waktu = '';
+        if ($kebiasaan['kode'] === 'bangun' && !empty($status_terlambat_terakhir['bangun'])) {
+            $keterangan_waktu = '<span class="text-amber-600 font-extrabold text-[11px] block mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> terdeteksi bangun kesiangan</span>';
+        } elseif ($kebiasaan['kode'] === 'tidur' && !empty($status_terlambat_terakhir['tidur'])) {
+            $keterangan_waktu = '<span class="text-amber-600 font-extrabold text-[11px] block mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> terdeteksi tidur terlambat</span>';
+        }
+
         $daftar_kebiasaan[] = array_merge($kebiasaan, [
             'total' => $total,
             'persen' => $persen,
             'status' => $status,
+            'keterangan_waktu' => $keterangan_waktu,
         ]);
     }
 }
@@ -199,21 +269,34 @@ if ($siswa) {
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Optimization untuk Fitur Cetak/Print */
+        /* Perbaikan CSS Print agar tidak kosong / blank */
         @media print {
+            body, html {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
             .no-print {
                 display: none !important;
             }
-            body {
-                background-color: #ffffff !important;
-                color: #000000 !important;
+            main {
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
             }
             .print-shadow-none {
                 box-shadow: none !important;
-                border: 1px solid #cbd5e1 !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
             .print-break-inside-avoid {
                 break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -258,7 +341,7 @@ if ($siswa) {
                     </select>
                 </div>
             <?php endif; ?>
-
+        </div>
 
         <?php if ($siswa): ?>
             <!-- Kartu Laporan Cetak Utama -->
@@ -356,6 +439,8 @@ if ($siswa) {
                                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                                 <?= htmlspecialchars($kb['kategori']) ?>
                                             </span>
+                                            <!-- Peringatan kuning dinamis berdasarkan status entri terakhir -->
+                                            <?= $kb['keterangan_waktu'] ?? '' ?>
                                         </div>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">

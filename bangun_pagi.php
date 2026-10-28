@@ -1,3 +1,21 @@
+<?php
+session_start();
+date_default_timezone_set('Asia/Jakarta');
+require_once 'koneksi.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$user_id   = $_SESSION['user_id'];
+$user_role = $_SESSION['role'] ?? 'siswa';
+
+$siswa_id = $user_id;
+if ($user_role === 'guru' && isset($_GET['id'])) {
+    $siswa_id = intval($_GET['id']);
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -24,7 +42,7 @@
 
         <div class="relative z-10 mx-auto max-w-md px-4">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
+                <a href="<?= ($user_role === 'guru') ? 'dashboard.php' : 'dashboard.php' ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
@@ -114,8 +132,11 @@
     <script>
         const CATEGORY = 'bangun';
         const ITEMS_PER_PAGE = 5;
+        const CURRENT_SISWA_ID = <?= $siswa_id ?>;
+        const USER_ROLE = "<?= $user_role ?>";
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        
         const addModal = document.getElementById('addModal');
         const successNotification = document.getElementById('successNotification');
         const openAddModalBtn = document.getElementById('openAddModalBtn');
@@ -138,6 +159,13 @@
         let cameraStream = null;
         let faceDetectionTimer = null;
         let faceDetected = false;
+
+        // Sembunyikan tombol Baru jika diakses oleh guru
+        document.addEventListener("DOMContentLoaded", function() {
+            if (USER_ROLE === 'guru') {
+                if (openAddModalBtn) openAddModalBtn.style.display = 'none';
+            }
+        });
 
         function setAutoDateTime() {
             const now = new Date();
@@ -353,7 +381,7 @@
         }
 
         function renderPager(totalItems) {
-            if (totalItems < ITEMS_PER_PAGE) {
+            if (totalItems <= ITEMS_PER_PAGE) {
                 pager.innerHTML = '';
                 return;
             }
@@ -407,31 +435,34 @@
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
             const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
-            historyList.innerHTML = pageItems.map(item => `
-                <div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-emerald-200 hover:bg-white hover:shadow-md">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                            <div class="mb-1.5 flex items-center gap-2">
-                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                                    📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </span>
-                                <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                    ⏰ ${formatClock(item.time)}
-                                </span>
+            historyList.innerHTML = pageItems.map(item => {
+                const isLate = item.option && item.option.includes('Kesiangan');
+                return `
+                    <div class="group relative overflow-hidden rounded-2xl border ${isLate ? 'border-amber-200 bg-amber-50/50' : 'border-slate-100 bg-slate-50/60'} p-3.5 transition hover:shadow-md">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="mb-1.5 flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                                        📅 ${new Date(item.date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </span>
+                                    <span class="inline-flex items-center rounded-md bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                        ⏰ ${formatClock(item.time)}
+                                    </span>
+                                </div>
+
+                                <h4 class="text-sm font-extrabold ${isLate ? 'text-amber-800' : 'text-slate-800'}">${escapeHtml(item.option || 'Bangun pagi')}</h4>
+                                <p class="mt-0.5 text-[11px] ${isLate ? 'text-amber-700 font-medium' : 'text-slate-500'}">
+                                    ${isLate ? '⚠️ Kamu bangun kesiangan (tidak tepat waktu).' : (item.note ? escapeHtml(item.note) : 'Catatan bangun pagi tepat waktu.')}
+                                </p>
                             </div>
 
-                            <h4 class="text-sm font-extrabold text-slate-800">${escapeHtml(item.option || 'Bangun pagi')}</h4>
-                            <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">
-                                ${item.note ? escapeHtml(item.note) : 'Catatan bangun pagi hari ini.'}
-                            </p>
-                        </div>
-
-                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
-                            ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto kegiatan bangun pagi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">☀️</div>'}
+                            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
+                                ${item.image ? `<img src="${item.image}" class="h-full w-full object-cover transition group-hover:scale-105" alt="Foto kegiatan bangun pagi" />` : '<div class="flex h-full w-full items-center justify-center text-xl text-slate-400">☀️</div>'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             renderPager(items.length);
         }
@@ -446,14 +477,29 @@
                 return;
             }
 
+            // Validasi Jam Kesiangan (Jam 06:30 atau lebih)
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const totalMinutesNow = currentHour * 60 + currentMinute;
+            
+            // Batas jam 06:30 adalah (6 * 60 + 30) = 390 menit dari pukul 00:00
+            const isLate = totalMinutesNow >= (6 * 60 + 30);
+            
+            let optionText = 'Bangun Pagi';
+            if (isLate) {
+                optionText = 'Bangun Pagi (Kesiangan)';
+            }
+
             const timestamp = setAutoDateTime();
             try {
                 await ActivityDB.save(CATEGORY, {
                     date: timestamp.date,
-                    option: 'Bangun pagi',
+                    option: optionText,
                     note: '',
                     image: photo
-                });
+                }, CURRENT_SISWA_ID);
+
                 currentPage = 1;
                 await loadHistory();
                 activityForm.reset();
@@ -461,6 +507,11 @@
                 imagePreviewWrapper.classList.add('hidden');
                 imagePreview.src = '';
                 closeModal();
+
+                if (isLate) {
+                    alert('Wah, kamu bangun agak kesiangan hari ini. Besok-besok jangan telat bangun pagi lagi ya! Semangat!');
+                }
+
                 successNotification.classList.remove('hidden');
                 clearTimeout(successNotificationTimer);
                 successNotificationTimer = setTimeout(() => {
@@ -485,7 +536,7 @@
 
         async function loadHistory() {
             try {
-                activityItems = await ActivityDB.list(CATEGORY);
+                activityItems = await ActivityDB.list(CATEGORY, CURRENT_SISWA_ID);
                 renderHistory();
             } catch (error) {
                 historyList.textContent = error.message;

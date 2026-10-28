@@ -104,15 +104,15 @@ if (!empty($siswa_list)) {
     }
 }
 
-// Daftar 7 Kebiasaan Anak Indonesia Hebat
+// Daftar 7 Kebiasaan Anak Indonesia Hebat beserta file tujuan detailnya
 $list_kebiasaan = [
-    ['kategori' => 'bangun', 'nama' => 'Bangun Pagi', 'icon' => 'fa-sun', 'color' => 'bg-amber-100 text-amber-800 border-amber-200'],
-    ['kategori' => 'ibadah', 'nama' => 'Beribadah', 'icon' => 'fa-hands-praying', 'color' => 'bg-emerald-100 text-emerald-800 border-emerald-200'],
-    ['kategori' => 'olahraga', 'nama' => 'Berolahraga', 'icon' => 'fa-person-running', 'color' => 'bg-blue-100 text-blue-800 border-blue-200'],
-    ['kategori' => 'makan', 'nama' => 'Makan Sehat', 'icon' => 'fa-apple-whole', 'color' => 'bg-rose-100 text-rose-800 border-rose-200'],
-    ['kategori' => 'belajar', 'nama' => 'Gemar Belajar', 'icon' => 'fa-book-open', 'color' => 'bg-purple-100 text-purple-800 border-purple-200'],
-    ['kategori' => 'tidur', 'nama' => 'Tidur Cepat', 'icon' => 'fa-bed', 'color' => 'bg-indigo-100 text-indigo-800 border-indigo-200'],
-    ['kategori' => 'bermasyarakat', 'nama' => 'Bermasyarakat', 'icon' => 'fa-handshake', 'color' => 'bg-teal-100 text-teal-800 border-teal-200'],
+    ['kategori' => 'bangun', 'nama' => 'Bangun Pagi', 'icon' => 'fa-sun', 'color' => 'bg-amber-100 text-amber-800 border-amber-200', 'file' => '../bangun_pagi.php'],
+    ['kategori' => 'ibadah', 'nama' => 'Beribadah', 'icon' => 'fa-hands-praying', 'color' => 'bg-emerald-100 text-emerald-800 border-emerald-200', 'file' => '../beribadah.php'],
+    ['kategori' => 'olahraga', 'nama' => 'Berolahraga', 'icon' => 'fa-person-running', 'color' => 'bg-blue-100 text-blue-800 border-blue-200', 'file' => '../berolahraga.php'],
+    ['kategori' => 'makan', 'nama' => 'Makan Sehat', 'icon' => 'fa-apple-whole', 'color' => 'bg-rose-100 text-rose-800 border-rose-200', 'file' => '../makan_sehat.php'],
+    ['kategori' => 'belajar', 'nama' => 'Gemar Belajar', 'icon' => 'fa-book-open', 'color' => 'bg-purple-100 text-purple-800 border-purple-200', 'file' => '../gemar_belajar.php'],
+    ['kategori' => 'tidur', 'nama' => 'Tidur Cepat', 'icon' => 'fa-bed', 'color' => 'bg-indigo-100 text-indigo-800 border-indigo-200', 'file' => '../tidur_cepat.php'],
+    ['kategori' => 'bermasyarakat', 'nama' => 'Bermasyarakat', 'icon' => 'fa-handshake', 'color' => 'bg-teal-100 text-teal-800 border-teal-200', 'file' => '../bermasyarakat.php'],
 ];
 ?>
 <!DOCTYPE html>
@@ -244,7 +244,7 @@ $list_kebiasaan = [
                 </div>
             </section>
 
-            <!-- Toolbar Pencarian & Filter (Sesuai Referensi Foto) -->
+            <!-- Toolbar Pencarian & Filter -->
             <div class="flex items-center gap-3">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -252,7 +252,7 @@ $list_kebiasaan = [
                 </div>
             </div>
 
-            <!-- Banner Info Total Siswa (Sesuai Referensi Foto) -->
+            <!-- Banner Info Total Siswa -->
             <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3 text-blue-900 shadow-sm">
                 <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-sm">
                     <i class="fa-solid fa-circle-info"></i>
@@ -262,7 +262,7 @@ $list_kebiasaan = [
                 </p>
             </div>
 
-            <!-- LIST DAFTAR SISWA (White Cards Layout Sesuai Referensi) -->
+            <!-- LIST DAFTAR SISWA -->
             <div id="siswaGrid" class="space-y-4">
                 <?php if (!empty($siswa_list)): ?>
                     <?php foreach ($siswa_list as $s): ?>
@@ -271,7 +271,7 @@ $list_kebiasaan = [
                         $overallProgress = 0;
                         foreach ($list_kebiasaan as $habit) {
                             $daysRecorded = $studentHabitStats[$habit['kategori']] ?? 0;
-                            $overallProgress += min(100, (int) round($daysRecorded / $daysInMonth * 100));
+                            $overallProgress += min(100, (int) round(($daysRecorded / $daysInMonth) * 100));
                         }
                         $overallProgress = (int) round($overallProgress / count($list_kebiasaan));
                         ?>
@@ -312,13 +312,13 @@ $list_kebiasaan = [
                                 </div>
                             </div>
 
-                            <!-- Statistik harian tiap kebiasaan untuk bulan berjalan -->
+                            <!-- Statistik & Tombol Interaktif Tiap Kebiasaan (Mengarah ke file masing-masing dengan ?id=...) -->
                             <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2 pt-1">
                                 <?php foreach ($list_kebiasaan as $kebiasaan):
                                     $daysRecorded = $studentHabitStats[$kebiasaan['kategori']] ?? 0;
-                                    $habitProgress = min(100, (int) round($daysRecorded / $daysInMonth * 100));
+                                    $habitProgress = min(100, (int) round(($daysRecorded / $daysInMonth) * 100));
                                 ?>
-                                    <div role="group" aria-label="<?= htmlspecialchars($kebiasaan['nama']) ?>: <?= $daysRecorded ?> dari <?= $daysInMonth ?> hari, <?= $habitProgress ?> persen" class="flex min-w-0 min-h-[112px] sm:min-h-[124px] flex-col items-center justify-between rounded-lg border p-1.5 sm:p-2 text-center <?= $kebiasaan['color'] ?>">
+                                    <a href="<?= $kebiasaan['file'] ?>?id=<?= $s['id'] ?>" role="group" aria-label="<?= htmlspecialchars($kebiasaan['nama']) ?>: <?= $daysRecorded ?> dari <?= $daysInMonth ?> hari, <?= $habitProgress ?> persen" class="flex min-w-0 min-h-[112px] sm:min-h-[124px] flex-col items-center justify-between rounded-lg border p-1.5 sm:p-2 text-center <?= $kebiasaan['color'] ?> hover:opacity-85 hover:shadow transition-all cursor-pointer">
                                         <i class="fa-solid <?= $kebiasaan['icon'] ?> text-sm sm:text-base" aria-hidden="true"></i>
                                         <span class="min-h-[24px] text-[9px] sm:text-[10px] font-extrabold leading-tight line-clamp-2">
                                             <?= htmlspecialchars($kebiasaan['nama']) ?>
@@ -328,7 +328,7 @@ $list_kebiasaan = [
                                         <span class="h-1 w-full overflow-hidden rounded-full bg-white/70" aria-hidden="true">
                                             <span class="block h-full rounded-full bg-emerald-700" style="width: <?= $habitProgress ?>%"></span>
                                         </span>
-                                    </div>
+                                    </a>
                                 <?php endforeach; ?>
                             </div>
 

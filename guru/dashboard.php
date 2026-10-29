@@ -108,7 +108,7 @@ if (!empty($siswa_list)) {
 $list_kebiasaan = [
     ['kategori' => 'bangun', 'nama' => 'Bangun Pagi', 'icon' => 'fa-sun', 'color' => 'bg-amber-100 text-amber-800 border-amber-200', 'file' => '../bangun_pagi.php'],
     ['kategori' => 'ibadah', 'nama' => 'Beribadah', 'icon' => 'fa-hands-praying', 'color' => 'bg-emerald-100 text-emerald-800 border-emerald-200', 'file' => '../beribadah.php'],
-    ['kategori' => 'olahraga', 'nama' => 'Berolahraga', 'icon' => 'fa-person-running', 'color' => 'bg-blue-100 text-blue-800 border-blue-200', 'file' => '../berolahraga.php'],
+    ['kategori' => 'olahraga', 'nama' => 'Berolahraga', 'icon' => 'fa-person-running', 'color' => 'bg-blue-100 text-blue-800 border-blue-200', 'file' => '../olahraga.php'],
     ['kategori' => 'makan', 'nama' => 'Makan Sehat', 'icon' => 'fa-apple-whole', 'color' => 'bg-rose-100 text-rose-800 border-rose-200', 'file' => '../makan_sehat.php'],
     ['kategori' => 'belajar', 'nama' => 'Gemar Belajar', 'icon' => 'fa-book-open', 'color' => 'bg-purple-100 text-purple-800 border-purple-200', 'file' => '../gemar_belajar.php'],
     ['kategori' => 'tidur', 'nama' => 'Tidur Cepat', 'icon' => 'fa-bed', 'color' => 'bg-indigo-100 text-indigo-800 border-indigo-200', 'file' => '../tidur_cepat.php'],
@@ -313,7 +313,7 @@ $list_kebiasaan = [
                                     $daysRecorded = $studentHabitStats[$kebiasaan['kategori']] ?? 0;
                                     $habitProgress = min(100, (int) round(($daysRecorded / $daysInMonth) * 100));
                                 ?>
-                                    <a href="<?= $kebiasaan['file'] ?>?id=<?= $s['id'] ?>" role="group" aria-label="<?= htmlspecialchars($kebiasaan['nama']) ?>: <?= $daysRecorded ?> dari <?= $daysInMonth ?> hari, <?= $habitProgress ?> persen" class="flex min-w-0 min-h-[112px] sm:min-h-[124px] flex-col items-center justify-between rounded-lg border p-1.5 sm:p-2 text-center <?= $kebiasaan['color'] ?> hover:opacity-85 hover:shadow transition-all cursor-pointer">
+                                    <a href="<?= $kebiasaan['file'] ?>?id=<?= (int) $s['id'] ?>&amp;kelas_id=<?= (int) $kelas_wali['id'] ?>" role="group" aria-label="<?= htmlspecialchars($kebiasaan['nama']) ?>: <?= $daysRecorded ?> dari <?= $daysInMonth ?> hari, <?= $habitProgress ?> persen" class="flex min-w-0 min-h-[112px] sm:min-h-[124px] flex-col items-center justify-between rounded-lg border p-1.5 sm:p-2 text-center <?= $kebiasaan['color'] ?> hover:opacity-85 hover:shadow transition-all cursor-pointer">
                                         <i class="fa-solid <?= $kebiasaan['icon'] ?> text-sm sm:text-base" aria-hidden="true"></i>
                                         <span class="min-h-[24px] text-[9px] sm:text-[10px] font-extrabold leading-tight line-clamp-2">
                                             <?= htmlspecialchars($kebiasaan['nama']) ?>

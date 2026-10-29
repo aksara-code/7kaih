@@ -10,12 +10,19 @@ function respond(int $status, array $payload): void
     exit();
 }
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'siswa') {
-    respond(401, ['success' => false, 'message' => 'Silakan login sebagai siswa terlebih dahulu.']);
+$method = $_SERVER['REQUEST_METHOD'] ?? '';
+if (!in_array($method, ['GET', 'POST'], true)) {
+    header('Allow: GET, POST');
+    respond(405, ['success' => false, 'message' => 'Metode tidak didukung.']);
 }
 
-$categories = ['bangun', 'tidur', 'ibadah', 'belajar'];
-$category = $_SERVER['REQUEST_METHOD'] === 'POST'
+$role = $_SESSION['role'] ?? '';
+if (!isset($_SESSION['user_id'])) {
+    respond(401, ['success' => false, 'message' => 'Silakan login terlebih dahulu.']);
+}
+
+$categories = ['bangun', 'tidur', 'ibadah', 'belajar', 'olahraga', 'makan', 'bermasyarakat'];
+$category = $method === 'POST'
     ? ($_POST['category'] ?? '')
     : ($_GET['category'] ?? '');
 
@@ -24,9 +31,64 @@ if (!in_array($category, $categories, true)) {
 }
 
 require_once 'koneksi.php';
-$studentId = (int) $_SESSION['user_id'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($method === 'GET') {
+    $studentId = (int) $_SESSION['user_id'];
+
+    if ($role === 'guru') {
+        $requestedStudentId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+        if ($requestedStudentId === false || $requestedStudentId === null || $requestedStudentId < 1) {
+            respond(400, ['success' => false, 'message' => 'ID siswa tidak valid.']);
+        }
+
+        $guruRole = $_SESSION['guru_role'] ?? '';
+        if ($guruRole === 'admin') {
+            $guruRole = 'wali-kelas';
+        }
+
+        try {
+            if ($guruRole === 'super-user') {
+                $requestedClassId = filter_var($_GET['kelas_id'] ?? null, FILTER_VALIDATE_INT);
+                if ($requestedClassId === false || $requestedClassId === null || $requestedClassId < 1) {
+                    respond(400, ['success' => false, 'message' => 'ID kelas tidak valid.']);
+                }
+
+                $accessStmt = $pdo->prepare(
+                    'SELECT 1 FROM siswa WHERE id = :id_siswa AND id_kelas = :id_kelas LIMIT 1'
+                );
+                $accessStmt->execute([
+                    'id_siswa' => $requestedStudentId,
+                    'id_kelas' => $requestedClassId,
+                ]);
+            } elseif ($guruRole === 'wali-kelas') {
+                $accessStmt = $pdo->prepare(
+                    'SELECT 1
+                     FROM siswa s
+                     INNER JOIN kelas k ON k.id = s.id_kelas
+                     WHERE s.id = :id_siswa AND k.id_guru = :id_guru
+                     LIMIT 1'
+                );
+                $accessStmt->execute([
+                    'id_siswa' => $requestedStudentId,
+                    'id_guru' => (int) $_SESSION['user_id'],
+                ]);
+            } else {
+                respond(403, ['success' => false, 'message' => 'Akses melihat riwayat siswa ditolak.']);
+            }
+
+            if (!$accessStmt->fetchColumn()) {
+                respond(403, ['success' => false, 'message' => 'Akses melihat riwayat siswa ditolak.']);
+            }
+        } catch (PDOException $exception) {
+            error_log($exception->getMessage());
+            respond(500, ['success' => false, 'message' => 'Gagal memeriksa akses siswa.']);
+        }
+
+        $studentId = (int) $requestedStudentId;
+    } elseif ($role !== 'siswa') {
+        respond(403, ['success' => false, 'message' => 'Akses melihat riwayat aktivitas ditolak.']);
+    }
+
     try {
         $stmt = $pdo->prepare(
             'SELECT waktu_mulai, deskripsi, catatan_tambahan, foto
@@ -53,11 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Allow: GET, POST');
-    respond(405, ['success' => false, 'message' => 'Metode tidak didukung.']);
+if ($role !== 'siswa') {
+    respond(403, ['success' => false, 'message' => 'Hanya siswa yang dapat menyimpan aktivitas.']);
 }
 
+$studentId = (int) $_SESSION['user_id'];
 $optionInput = $_POST['option'] ?? '';
 $noteInput = $_POST['note'] ?? '';
 $date = $_POST['date'] ?? date('Y-m-d');

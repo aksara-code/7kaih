@@ -11,9 +11,76 @@ if (!isset($_SESSION['user_id'])) {
 $user_id   = $_SESSION['user_id'];
 $user_role = $_SESSION['role'] ?? 'siswa';
 
-$siswa_id = $user_id;
-if ($user_role === 'guru' && isset($_GET['id'])) {
-    $siswa_id = intval($_GET['id']);
+if (!in_array($user_role, ['siswa', 'guru'], true)) {
+    header('Location: index.php');
+    exit();
+}
+
+$siswa_id = (int) $user_id;
+$canAddActivity = $user_role === 'siswa' && !isset($_GET['id']);
+$dashboardUrl = $user_role === 'guru' ? 'guru/dashboard.php' : 'dashboard.php';
+
+if ($user_role === 'guru') {
+    $requestedStudentId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+    if ($requestedStudentId === false || $requestedStudentId === null || $requestedStudentId < 1) {
+        header('Location: guru/dashboard.php');
+        exit();
+    }
+
+    $guruRole = $_SESSION['guru_role'] ?? '';
+    if ($guruRole === 'admin') {
+        $guruRole = 'wali-kelas';
+    }
+
+    try {
+        if ($guruRole === 'super-user') {
+            $requestedClassId = filter_var($_GET['kelas_id'] ?? null, FILTER_VALIDATE_INT);
+            if ($requestedClassId === false || $requestedClassId === null || $requestedClassId < 1) {
+                header('Location: admin/dashboard.php');
+                exit();
+            }
+
+            $stmt_access = $pdo->prepare(
+                'SELECT 1 FROM siswa WHERE id = :id_siswa AND id_kelas = :id_kelas LIMIT 1'
+            );
+            $stmt_access->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_kelas' => $requestedClassId,
+            ]);
+            $dashboardUrl .= '?kelas_id=' . $requestedClassId;
+        } elseif ($guruRole === 'wali-kelas') {
+            $stmt_access = $pdo->prepare(
+                'SELECT 1
+                 FROM siswa s
+                 INNER JOIN kelas k ON k.id = s.id_kelas
+                 WHERE s.id = :id_siswa AND k.id_guru = :id_guru
+                 LIMIT 1'
+            );
+            $stmt_access->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_guru' => (int) $_SESSION['user_id'],
+            ]);
+        } else {
+            header('Location: logout.php');
+            exit();
+        }
+
+        if (!$stmt_access->fetchColumn()) {
+            header('Location: ' . $dashboardUrl);
+            exit();
+        }
+    } catch (PDOException $exception) {
+        error_log($exception->getMessage());
+        http_response_code(500);
+        exit('Gagal memeriksa akses siswa.');
+    }
+
+    $siswa_id = (int) $requestedStudentId;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$canAddActivity) {
+    http_response_code(403);
+    exit('Form aktivitas hanya dapat digunakan oleh siswa.');
 }
 ?>
 <!DOCTYPE html>
@@ -50,15 +117,17 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
         <div class="relative z-10 mx-auto max-w-md px-5">
             <!-- Navigation & Action Bar -->
             <div class="mb-6 flex items-center justify-between gap-3">
-                <a href="<?= ($user_role === 'guru') ? 'dashboard.php' : 'dashboard.php' ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
+                <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
 
-                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-50 active:scale-95">
-                    <span class="text-base leading-none">＋</span>
-                    <span>Baru</span>
-                </button>
+                <?php if ($canAddActivity): ?>
+                    <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-50 active:scale-95">
+                        <span class="text-base leading-none">＋</span>
+                        <span>Baru</span>
+                    </button>
+                <?php endif; ?>
             </div>
 
             <!-- Title & Branding -->
@@ -99,6 +168,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
         </div>
     </main>
 
+    <?php if ($canAddActivity): ?>
     <!-- Modal Form Tambah Kegiatan -->
     <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm">
         <div class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl transition-all">
@@ -128,9 +198,9 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
                     <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-md px-3 py-2 text-center border-t border-white/10">
                         <p id="cameraStatus" class="text-xs font-semibold text-slate-300">Menyiapkan kamera...</p>
                     </div>
-                </div>
+                    </div>
 
-                <!-- Preview Area -->
+                    <!-- Preview Area -->
                 <div id="imagePreviewWrapper" class="hidden overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/50 p-2">
                     <p class="mb-2 text-[11px] font-bold text-emerald-800 text-center">Foto Terverifikasi:</p>
                     <img id="imagePreview" class="h-40 w-full rounded-xl object-cover shadow-sm" alt="Preview tidur" />
@@ -155,6 +225,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
             </form>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="mt-auto py-8 text-center text-xs font-medium text-slate-400">
@@ -162,12 +233,12 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
     </footer>
 
     <!-- Logic Script -->
-    <script src="activity-db.js"></script>
+    <script src="activity-db.js?v=<?= filemtime(__DIR__ . '/activity-db.js') ?>"></script>
     <script>
         const CATEGORY = 'tidur';
         const ITEMS_PER_PAGE = 5;
-        const CURRENT_SISWA_ID = <?= $siswa_id ?>;
-        const USER_ROLE = "<?= $user_role ?>";
+        const CURRENT_SISWA_ID = <?= json_encode($siswa_id) ?>;
+        const USER_ROLE = <?= json_encode($user_role) ?>;
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
@@ -193,12 +264,6 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
         let cameraStream = null;
         let faceDetectionTimer = null;
         let faceDetected = false;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            if (USER_ROLE === 'guru') {
-                if (openAddModalBtn) openAddModalBtn.style.display = 'none';
-            }
-        });
 
         function setAutoDateTime() {
             const now = new Date();
@@ -499,7 +564,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
             renderPager(items.length);
         }
 
-        activityForm.addEventListener('submit', async function (event) {
+        if (activityForm) activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const photo = capturedImageData.value;
@@ -533,7 +598,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
                     option: optionText,
                     note: '',
                     image: photo
-                }, CURRENT_SISWA_ID);
+                });
 
                 currentPage = 1;
                 await loadHistory();
@@ -558,12 +623,12 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
             }
         });
 
-        captureFaceBtn.addEventListener('click', captureFacePhoto);
-        retakeFaceBtn.addEventListener('click', resetCapturedPhoto);
-        openAddModalBtn.addEventListener('click', openModal);
-        closeAddModalBtn.addEventListener('click', closeModal);
+        if (captureFaceBtn) captureFaceBtn.addEventListener('click', captureFacePhoto);
+        if (retakeFaceBtn) retakeFaceBtn.addEventListener('click', resetCapturedPhoto);
+        if (openAddModalBtn) openAddModalBtn.addEventListener('click', openModal);
+        if (closeAddModalBtn) closeAddModalBtn.addEventListener('click', closeModal);
         if (cancelAddModalBtn) cancelAddModalBtn.addEventListener('click', closeModal);
-        addModal.addEventListener('click', function (event) {
+        if (addModal) addModal.addEventListener('click', function (event) {
             if (event.target === addModal) {
                 closeModal();
             }
@@ -571,7 +636,8 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
 
         async function loadHistory() {
             try {
-                activityItems = await ActivityDB.list(CATEGORY, CURRENT_SISWA_ID);
+                const requestedStudentId = USER_ROLE === 'guru' ? CURRENT_SISWA_ID : null;
+                activityItems = await ActivityDB.list(CATEGORY, requestedStudentId);
                 renderHistory();
             } catch (error) {
                 historyList.textContent = error.message;

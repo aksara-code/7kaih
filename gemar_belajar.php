@@ -1,3 +1,85 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
+$userRole = $_SESSION['role'] ?? '';
+if (!in_array($userRole, ['siswa', 'guru'], true)) {
+    header('Location: index.php');
+    exit();
+}
+
+$studentId = (int) $_SESSION['user_id'];
+$dashboardUrl = $userRole === 'guru' ? 'guru/dashboard.php' : 'dashboard.php';
+
+if ($userRole === 'guru') {
+    require_once 'koneksi.php';
+
+    $requestedStudentId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+    if ($requestedStudentId === false || $requestedStudentId === null || $requestedStudentId < 1) {
+        header('Location: guru/dashboard.php');
+        exit();
+    }
+
+    $guruRole = $_SESSION['guru_role'] ?? '';
+    if ($guruRole === 'admin') {
+        $guruRole = 'wali-kelas';
+    }
+
+    try {
+        if ($guruRole === 'super-user') {
+            $requestedClassId = filter_var($_GET['kelas_id'] ?? null, FILTER_VALIDATE_INT);
+            if ($requestedClassId === false || $requestedClassId === null || $requestedClassId < 1) {
+                header('Location: admin/dashboard.php');
+                exit();
+            }
+
+            $accessStmt = $pdo->prepare(
+                'SELECT 1 FROM siswa WHERE id = :id_siswa AND id_kelas = :id_kelas LIMIT 1'
+            );
+            $accessStmt->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_kelas' => $requestedClassId,
+            ]);
+            $dashboardUrl .= '?kelas_id=' . $requestedClassId;
+        } elseif ($guruRole === 'wali-kelas') {
+            $accessStmt = $pdo->prepare(
+                'SELECT 1
+                 FROM siswa s
+                 INNER JOIN kelas k ON k.id = s.id_kelas
+                 WHERE s.id = :id_siswa AND k.id_guru = :id_guru
+                 LIMIT 1'
+            );
+            $accessStmt->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_guru' => (int) $_SESSION['user_id'],
+            ]);
+        } else {
+            header('Location: logout.php');
+            exit();
+        }
+
+        if (!$accessStmt->fetchColumn()) {
+            header('Location: ' . $dashboardUrl);
+            exit();
+        }
+    } catch (PDOException $exception) {
+        error_log($exception->getMessage());
+        http_response_code(500);
+        exit('Gagal memeriksa akses siswa.');
+    }
+
+    $studentId = (int) $requestedStudentId;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userRole !== 'siswa') {
+    http_response_code(403);
+    exit('Guru hanya dapat melihat riwayat kegiatan siswa.');
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -25,15 +107,17 @@
 
         <div class="relative z-10 mx-auto max-w-md px-4">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <a href="dashboard.php" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95">
+                <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
 
-                <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50 active:scale-95">
-                    <span class="text-base leading-none">＋</span>
-                    <span>Baru</span>
-                </button>
+                <?php if ($userRole === 'siswa'): ?>
+                    <button id="openAddModalBtn" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#0c6d4d] shadow-md shadow-emerald-900/10 transition hover:bg-emerald-50 active:scale-95">
+                        <span class="text-base leading-none">＋</span>
+                        <span>Baru</span>
+                    </button>
+                <?php endif; ?>
             </div>
 
             <div class="flex items-center justify-center gap-4">
@@ -77,6 +161,7 @@
         </div>
     </div>
 
+    <?php if ($userRole === 'siswa'): ?>
     <!-- Modal Tambah Kegiatan -->
     <div id="addModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
         <div class="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-[26px] bg-white p-5 shadow-[0_30px_80px_rgba(15,23,42,0.25)]">
@@ -86,7 +171,6 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-
             <form id="activityForm" class="space-y-4">
                 <div>
                     <label for="entryDate" class="mb-1.5 block text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-slate-700">Tanggal <span class="text-rose-500">*</span></label>
@@ -126,16 +210,19 @@
             </form>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="mt-auto py-10 text-center text-xs text-slate-500">
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
-    <script src="activity-db.js"></script>
+    <script src="activity-db.js?v=<?= filemtime(__DIR__ . '/activity-db.js') ?>"></script>
     <script>
         const CATEGORY = 'belajar';
         const ITEMS_PER_PAGE = 5;
+        const CURRENT_SISWA_ID = <?= json_encode($studentId) ?>;
+        const USER_ROLE = <?= json_encode($userRole) ?>;
 
         const addModal = document.getElementById('addModal');
         const successNotification = document.getElementById('successNotification');
@@ -224,7 +311,7 @@
             reader.readAsDataURL(file);
         }
 
-        imageInput.addEventListener('change', handleImageSelect);
+        if (imageInput) imageInput.addEventListener('change', handleImageSelect);
 
         function renderPager(totalItems) {
             if (totalItems <= ITEMS_PER_PAGE) {
@@ -318,7 +405,7 @@
             renderPager(items.length);
         }
         
-        activityForm.addEventListener('submit', async function (event) {
+        if (activityForm) activityForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const selected = manualActivity.value.trim() || 'Belajar';
@@ -345,11 +432,11 @@
             }
         });
 
-        openAddModalBtn.addEventListener('click', openModal);
-        closeAddModalBtn.addEventListener('click', closeModal);
+        if (openAddModalBtn) openAddModalBtn.addEventListener('click', openModal);
+        if (closeAddModalBtn) closeAddModalBtn.addEventListener('click', closeModal);
         if (cancelAddModalBtn) cancelAddModalBtn.addEventListener('click', closeModal);
         
-        addModal.addEventListener('click', function (event) {
+        if (addModal) addModal.addEventListener('click', function (event) {
             if (event.target === addModal) {
                 closeModal();
             }
@@ -358,7 +445,8 @@
         async function loadHistory() {
             try {
                 if (typeof ActivityDB !== 'undefined' && ActivityDB.list) {
-                    activityItems = await ActivityDB.list(CATEGORY);
+                    const requestedStudentId = USER_ROLE === 'guru' ? CURRENT_SISWA_ID : null;
+                    activityItems = await ActivityDB.list(CATEGORY, requestedStudentId);
                 } else {
                     activityItems = [];
                 }

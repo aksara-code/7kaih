@@ -11,9 +11,28 @@ if (!isset($_SESSION['user_id'])) {
 $user_id   = $_SESSION['user_id'];
 $user_role = $_SESSION['role'] ?? 'siswa';
 
-$siswa_id = $user_id;
-if ($user_role === 'guru' && isset($_GET['id'])) {
-    $siswa_id = intval($_GET['id']);
+if (!in_array($user_role, ['siswa', 'guru'], true)) {
+    header('Location: index.php');
+    exit();
+}
+
+$siswa_id = (int) $user_id;
+$dashboardUrl = $user_role === 'guru' ? 'guru/dashboard.php' : 'dashboard.php';
+if ($user_role === 'guru') {
+    $requestedStudentId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+    if ($requestedStudentId === false || $requestedStudentId === null || $requestedStudentId < 1) {
+        header('Location: guru/dashboard.php');
+        exit();
+    }
+
+    $siswa_id = $requestedStudentId;
+
+    if (($_SESSION['guru_role'] ?? '') === 'super-user') {
+        $requestedClassId = filter_var($_GET['kelas_id'] ?? null, FILTER_VALIDATE_INT);
+        if ($requestedClassId !== false && $requestedClassId !== null && $requestedClassId > 0) {
+            $dashboardUrl .= '?kelas_id=' . $requestedClassId;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -42,7 +61,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
 
         <div class="relative z-10 mx-auto max-w-md px-4">
             <div class="mb-5 flex items-center justify-between gap-3">
-                <a href="<?= ($user_role === 'guru') ? 'dashboard.php' : 'dashboard.php' ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
+                <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold text-white backdrop-blur-sm transition hover:bg-white/15">
                     <span aria-hidden="true">←</span>
                     <span>Kembali ke Beranda</span>
                 </a>
@@ -128,12 +147,12 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
         © 2026 Tujuh Kebiasaan Anak Indonesia Hebat
     </footer>
 
-    <script src="activity-db.js"></script>
+    <script src="activity-db.js?v=<?= filemtime(__DIR__ . '/activity-db.js') ?>"></script>
     <script>
         const CATEGORY = 'bangun';
         const ITEMS_PER_PAGE = 5;
-        const CURRENT_SISWA_ID = <?= $siswa_id ?>;
-        const USER_ROLE = "<?= $user_role ?>";
+        const CURRENT_SISWA_ID = <?= json_encode($siswa_id) ?>;
+        const USER_ROLE = <?= json_encode($user_role) ?>;
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
         const FALLBACK_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
         
@@ -498,7 +517,7 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
                     option: optionText,
                     note: '',
                     image: photo
-                }, CURRENT_SISWA_ID);
+                });
 
                 currentPage = 1;
                 await loadHistory();
@@ -536,7 +555,8 @@ if ($user_role === 'guru' && isset($_GET['id'])) {
 
         async function loadHistory() {
             try {
-                activityItems = await ActivityDB.list(CATEGORY, CURRENT_SISWA_ID);
+                const studentId = USER_ROLE === 'guru' ? CURRENT_SISWA_ID : null;
+                activityItems = await ActivityDB.list(CATEGORY, studentId);
                 renderHistory();
             } catch (error) {
                 historyList.textContent = error.message;

@@ -5,13 +5,82 @@ date_default_timezone_set('Asia/Jakarta');
 
 require_once 'koneksi.php';
 
-// Cek apakah siswa sudah login
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'siswa') {
-    header("Location: index.php");
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
     exit();
 }
 
-$siswa_id = $_SESSION['user_id'];
+$userRole = $_SESSION['role'] ?? '';
+if (!in_array($userRole, ['siswa', 'guru'], true)) {
+    header('Location: index.php');
+    exit();
+}
+
+$siswa_id = (int) $_SESSION['user_id'];
+$dashboardUrl = $userRole === 'guru' ? 'guru/dashboard.php' : 'dashboard.php';
+
+if ($userRole === 'guru') {
+    $requestedStudentId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+    if ($requestedStudentId === false || $requestedStudentId === null || $requestedStudentId < 1) {
+        header('Location: guru/dashboard.php');
+        exit();
+    }
+
+    $guruRole = $_SESSION['guru_role'] ?? '';
+    if ($guruRole === 'admin') {
+        $guruRole = 'wali-kelas';
+    }
+
+    try {
+        if ($guruRole === 'super-user') {
+            $requestedClassId = filter_var($_GET['kelas_id'] ?? null, FILTER_VALIDATE_INT);
+            if ($requestedClassId === false || $requestedClassId === null || $requestedClassId < 1) {
+                header('Location: admin/dashboard.php');
+                exit();
+            }
+
+            $stmt_access = $pdo->prepare(
+                'SELECT 1 FROM siswa WHERE id = :id_siswa AND id_kelas = :id_kelas LIMIT 1'
+            );
+            $stmt_access->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_kelas' => $requestedClassId,
+            ]);
+            $dashboardUrl .= '?kelas_id=' . $requestedClassId;
+        } elseif ($guruRole === 'wali-kelas') {
+            $stmt_access = $pdo->prepare(
+                'SELECT 1
+                 FROM siswa s
+                 INNER JOIN kelas k ON k.id = s.id_kelas
+                 WHERE s.id = :id_siswa AND k.id_guru = :id_guru
+                 LIMIT 1'
+            );
+            $stmt_access->execute([
+                'id_siswa' => $requestedStudentId,
+                'id_guru' => (int) $_SESSION['user_id'],
+            ]);
+        } else {
+            header('Location: logout.php');
+            exit();
+        }
+
+        if (!$stmt_access->fetchColumn()) {
+            header('Location: ' . $dashboardUrl);
+            exit();
+        }
+    } catch (PDOException $exception) {
+        error_log($exception->getMessage());
+        http_response_code(500);
+        exit('Gagal memeriksa akses siswa.');
+    }
+
+    $siswa_id = (int) $requestedStudentId;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userRole !== 'siswa') {
+    http_response_code(403);
+    exit('Guru hanya dapat melihat riwayat kegiatan siswa.');
+}
 
 // Ambil notifikasi dari session (Pattern PRG) lalu hapus agar hanya muncul sekali
 $error   = $_SESSION['error'] ?? '';
@@ -71,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Simpan pesan sukses ke session dan redirect (PRG Pattern)
                 $_SESSION['success'] = 'Catatan makan sehat & bergizi berhasil disimpan!';
-                header("Location: makan_sehat.php");
+                header('Location: makan_sehat.php');
                 exit();
 
             } catch (\PDOException $e) {
@@ -146,15 +215,17 @@ try {
         <div class="max-w-xl mx-auto relative z-10 space-y-4">
             <!-- Navigasi Kembali ke Dashboard & Tombol + Baru -->
             <div class="flex items-center justify-between">
-                <a href="dashboard.php" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
+                <a href="<?= htmlspecialchars($dashboardUrl, ENT_QUOTES, 'UTF-8') ?>" class="inline-flex items-center text-xs font-bold bg-emerald-700/60 hover:bg-emerald-700 px-3 py-2 rounded-xl text-emerald-100 transition-all">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Beranda
                 </a>
                 
                 <!-- Tombol + Baru -->
-                <button onclick="toggleModal(true)" type="button" 
-                    class="inline-flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
-                    <i class="fa-solid fa-plus text-xs"></i> Baru
-                </button>
+                    <?php if ($userRole === 'siswa'): ?>
+                        <button onclick="toggleModal(true)" type="button"
+                            class="inline-flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 active:bg-emerald-100 text-xs font-extrabold px-3.5 py-2 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-plus text-xs"></i> Baru
+                        </button>
+                    <?php endif; ?>
             </div>
 
             <!-- Logo + Judul Layout Horizontal -->
@@ -206,9 +277,11 @@ try {
                     <div class="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2">
                         <i class="fa-solid fa-utensils text-2xl text-emerald-600"></i>
                     </div>
-                    <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 mb-1">Kamu belum mengisi data</h3>
+                    <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 mb-1"><?= $userRole === 'guru' ? 'Siswa belum mengisi data' : 'Kamu belum mengisi data' ?></h3>
                     <p class="text-[11px] sm:text-xs text-slate-500 font-medium max-w-xs mx-auto leading-relaxed">
-                        Belum ada catatan makan sehat & bergizi. Klik tombol <strong>"+ Baru"</strong> di bagian atas untuk menambahkan kegiatan.
+                        <?= $userRole === 'guru'
+                            ? 'Belum ada catatan makan sehat dan bergizi untuk siswa ini.'
+                            : 'Belum ada catatan makan sehat & bergizi. Klik tombol <strong>"+ Baru"</strong> di bagian atas untuk menambahkan kegiatan.' ?>
                     </p>
                 </div>
             <?php else: ?>
@@ -253,7 +326,7 @@ try {
                             
                             <!-- Tombol Prev -->
                             <?php if ($page > 1): ?>
-                                <a href="?page=<?= $page - 1 ?>" 
+                                <a href="?<?= htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $page - 1])), ENT_QUOTES, 'UTF-8') ?>"
                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
                                     <i class="fa-solid fa-chevron-left text-[10px]"></i> Prev
                                 </a>
@@ -270,7 +343,7 @@ try {
 
                             <!-- Tombol Next -->
                             <?php if ($page < $total_pages): ?>
-                                <a href="?page=<?= $page + 1 ?>" 
+                                <a href="?<?= htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $page + 1])), ENT_QUOTES, 'UTF-8') ?>"
                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs shadow-sm border border-slate-200 transition-all active:scale-95">
                                     Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
                                 </a>
@@ -282,12 +355,13 @@ try {
 
                         </div>
                     </div>
-                <?php endif; ?>
 
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
 
+    <?php if ($userRole === 'siswa'): ?>
     <!-- POP-UP MODAL FORM -->
     <div id="modalForm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-6">
@@ -344,6 +418,7 @@ try {
             </form>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="text-center py-5 mt-4">

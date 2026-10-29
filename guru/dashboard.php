@@ -5,7 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 date_default_timezone_set('Asia/Jakarta');
 require_once '../koneksi.php';
 
-// Validasi Keamanan Akses Guru
+// 1. Validasi Keamanan Akses Guru
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guru') {
     header("Location: ../index.php");
     exit();
@@ -104,7 +104,7 @@ if (!empty($siswa_list)) {
     }
 }
 
-// Daftar 7 Kebiasaan Anak Indonesia Hebat beserta file tujuan detailnya
+// Daftar 7 Kebiasaan Anak Indonesia Hebat beserta file tujuan detail aktivitas masing-masing
 $list_kebiasaan = [
     ['kategori' => 'bangun', 'nama' => 'Bangun Pagi', 'icon' => 'fa-sun', 'color' => 'bg-amber-100 text-amber-800 border-amber-200', 'file' => '../bangun_pagi.php'],
     ['kategori' => 'ibadah', 'nama' => 'Beribadah', 'icon' => 'fa-hands-praying', 'color' => 'bg-emerald-100 text-emerald-800 border-emerald-200', 'file' => '../beribadah.php'],
@@ -162,7 +162,6 @@ $list_kebiasaan = [
                     <i class="fa-solid fa-chart-pie w-5 text-center text-emerald-300"></i>
                     <span>Dashboard</span>
                 </a>
-
             </nav>
         </div>
 
@@ -192,7 +191,6 @@ $list_kebiasaan = [
         <!-- TOP NAVBAR -->
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
             <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-                
                 <div class="flex items-center gap-3">
                     <div>
                         <h1 class="font-extrabold text-base sm:text-lg text-slate-900 leading-tight">
@@ -213,7 +211,6 @@ $list_kebiasaan = [
                         <i class="fa-solid fa-bars text-lg"></i>
                     </button>
                 </div>
-
             </div>
         </header>
 
@@ -280,7 +277,6 @@ $list_kebiasaan = [
                             <!-- Header Kartu: Avatar, Nama, NISN & Tombol Laporan -->
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-3.5 min-w-0">
-                                    <!-- Avatar Inisial Bulat -->
                                     <div class="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0 uppercase">
                                         <?= mb_substr(trim($s['nama']), 0, 1) ?>
                                     </div>
@@ -294,7 +290,6 @@ $list_kebiasaan = [
                                     </div>
                                 </div>
 
-                                <!-- Tombol Laporan -->
                                 <a href="laporan_siswa.php?id=<?= $s['id'] ?>" class="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-sm">
                                     <i class="fa-solid fa-file-lines"></i>
                                     <span class="hidden sm:inline">Laporan</span>
@@ -312,7 +307,7 @@ $list_kebiasaan = [
                                 </div>
                             </div>
 
-                            <!-- Statistik & Tombol Interaktif Tiap Kebiasaan (Mengarah ke file masing-masing dengan ?id=...) -->
+                            <!-- Statistik & Tombol Interaktif Tiap Kebiasaan (Mengarah ke file detail kegiatan masing-masing) -->
                             <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2 pt-1">
                                 <?php foreach ($list_kebiasaan as $kebiasaan):
                                     $daysRecorded = $studentHabitStats[$kebiasaan['kategori']] ?? 0;
@@ -359,7 +354,6 @@ $list_kebiasaan = [
 
     <!-- JavaScript: Toggle Sidebar & Search Filter -->
     <script>
-        // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
         const openBtn = document.getElementById('open-sidebar');
@@ -374,7 +368,6 @@ $list_kebiasaan = [
         if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
 
-        // Filter Pencarian Siswa Real-Time
         function filterSiswa() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('.siswa-card');
